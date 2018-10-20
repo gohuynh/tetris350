@@ -91,5 +91,64 @@ module processor(
     input [31:0] data_readRegA, data_readRegB;
 
     /* YOUR CODE STARTS HERE */
+	 
+	 /*
+	 -----------------------------------------------
+	 F logic
+	 -----------------------------------------------
+	 */
+	 wire [11:0] nextPC, curPC, seqNextPC, branchPC;
+	 wire inePC, branchBool;
+	 
+	 // Changes every cycle for now i.e. no stalling yet
+	 pcLatch pc(clock, 1'b1, reset, nextPC, curPC);
+	 
+	 assign address_imem = curPC;
+	 
+	 addsub pcALU(curPC, 32'd12, 1'b1, seqNextPC, inePC);
+	 
+	 assign nextPC = branchBool ? branchPC : seqNextPC;
+	 
+	 /*
+	 -----------------------------------------------
+	 D logic
+	 -----------------------------------------------
+	 */
+	 wire[4:0] dOpcode, rawRd, dRd, rawRs, rs, rawRt, rt, dShamt, dAluOp;
+	 wire[16:0] dImm;
+	 wire[26:0] dT;
+	 wire[11:0] fdSeqNextPC;
+	 wire readRd, rsToRd;
+	 
+	 // Changes every cycle for now i.e. no stalling yet
+	 fdLatch fd(clock, q_imem, seqNextPC, 1'b1, reset, 
+					dOpcode, rawRd, rawRs, rt, dShamt, dAluOp, dImm, dT, fdSeqNextPC);
+	 
+	 wire dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dSetx, dBex;
+	 opDecoder dOpDecoder(dOpcode, dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dSetx, dBex);
+	 
+	 or rdOr(readRd, dSw, dBne, dJr, dBlt);
+	 or rtOr(rsToRd, dBne, dBlt);
+	 
+	 assign dRd = dSw ? rawRs : rawRd;
+	 assign rs = readRd ? rawRd : rawRs;
+	 assign rt = rsToRd ? rawRs : rawRt;
+	 
+	 assign ctrl_readRegA = rs;
+	 assign ctrl_readRegB = rt;
+	 
+	 /*
+	 -----------------------------------------------
+	 X logic
+	 -----------------------------------------------
+	 */
+	 wire[11:0] dxSeqNextPC;
+	 wire[4:0] xOpcode, xRd, xShamt, xAluOp, xImm, xT;
+	 wire[31:0] operandA, operandB;
+	 
+	 // Changes every cycle for now i.e. no stalling yet
+	 dxLatch dx(clock, fdSeqNextPC, data_readRegA, data_readRegB, dOpcode, dRd, dShamt, dAluOp, dImm, dT, 1'b1, reset, 
+					dxSeqNextPC, operandA, operandB, xOpcode, xRd, xShamt, xAluOp, xImm, xT);
+	 
 
 endmodule
