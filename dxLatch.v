@@ -4,11 +4,15 @@ module dxLatch(clock, seqNextPcIn, inA, inB, opcodeIn, rdIn, shamtIn, aluopIn, i
 	input clock, inEnabled, reset;
 	input[11:0] seqNextPcIn;
 	input[31:0] inA, inB;
-	input[4:0] opcodeIn, rdIn, shamtIn, aluopIn, immIn, tIn;
+	input[4:0] opcodeIn, rdIn, shamtIn, aluopIn;
+	input[16:0] immIn;
+	input[26:0] tIn;
 	
 	output[11:0] seqNextPcOut;
 	output[31:0] operandA, operandB;
-	output[4:0] opcodeOut, rdOut, shamtOut, aluopOut, immOut, tOut;
+	output[4:0] opcodeOut, rdOut, shamtOut, aluopOut;
+	output[16:0] immOut;
+	output[26:0] tOut;
 	
 	
 	// Latch Data
@@ -19,8 +23,8 @@ module dxLatch(clock, seqNextPcIn, inA, inB, opcodeIn, rdIn, shamtIn, aluopIn, i
 	reg5 rdReg(clock, inEnabled, reset, rdIn, rdOut);
 	reg5 shamtReg(clock, inEnabled, reset, shamtIn, shamtOut);
 	reg5 aluopReg(clock, inEnabled, reset, aluopIn, aluopOut);
-	reg5 immReg(clock, inEnabled, reset, immIn, immOut);
-	reg5 tReg(clock, inEnabled, reset, tIn, tOut);
+	reg17 immReg(clock, inEnabled, reset, immIn, immOut);
+	reg27 tReg(clock, inEnabled, reset, tIn, tOut);
 	
 	
 endmodule

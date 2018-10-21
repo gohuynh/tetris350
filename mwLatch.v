@@ -14,6 +14,6 @@ module mwLatch(clock, oIn, dIn, wRegIn, lwIn, rdIn, inEnabled, reset,
 	reg32 d(clock, inEnabled, reset, dIn, dOut);
 	reg5 rdReg(clock, inEnabled, reset, rdIn, rdOut);
 	dffe_ref wReg(wRegOut, wRegIn, clock, inEnabled, reset);
-	dffe_ref wReg(lwOut, lwIn, clock, inEnabled, reset);
+	dffe_ref lw(lwOut, lwIn, clock, inEnabled, reset);
 	
 endmodule

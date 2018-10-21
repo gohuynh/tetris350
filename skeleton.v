@@ -19,7 +19,7 @@ module skeleton(clock, reset);
     wire [31:0] q_imem;
     imem my_imem(
         .address    (address_imem),            // address of data
-        .clock      (~clock),                  // you may need to invert the clock
+        .clock      (clock),                  // you may need to invert the clock
         .q          (q_imem)                   // the raw instruction
     );
 

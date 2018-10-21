@@ -97,17 +97,24 @@ module processor(
 	 F logic
 	 -----------------------------------------------
 	 */
-	 wire [11:0] nextPC, curPC, seqNextPC, branchPC;
-	 wire fCout, branchBool;
+	 wire [31:0] extendedCur, seqNextPC;
+	 wire [11:0] nextPC, curPC, branchPC;
+	 wire fCout, branchBool, firstCycle, isFirstCycle;
+	 
+	 dffe_ref initCycle(isFirstCycle, firstCycle, clock, 1'b1, reset);
+	 assign firstCycle = 1'b1;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
-	 pcLatch pc(clock, 1'b1, reset, nextPC, curPC);
+	 pcLatch pc(clock, isFirstCycle, reset, nextPC, curPC);
 	 
 	 assign address_imem = curPC;
 	 
-	 claAdder pcAdder(curPC, 32'd12, 1'b0, seqNextPC, fCout);
+	 assign extendedCur[11:0] = curPC;
+	 assign extendedCur[31:12] = 20'd0;
 	 
-	 assign nextPC = branchBool ? branchPC : seqNextPC;
+	 claAdder pcAdder(extendedCur, 32'd1, 1'b0, seqNextPC, fCout);
+	 
+	 assign nextPC = branchBool ? branchPC : seqNextPC[11:0];
 	 
 	 /*
 	 -----------------------------------------------
@@ -121,8 +128,8 @@ module processor(
 	 wire readRd, rsToRd;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
-	 fdLatch fd(clock, q_imem, seqNextPC, 1'b1, reset, 
-					dOpcode, rawRd, rawRs, rt, dShamt, dAluOp, dImm, dT, fdSeqNextPC);
+	 fdLatch fd(clock, q_imem, seqNextPC[11:0], 1'b1, reset, 
+					dOpcode, rawRd, rawRs, rawRt, dShamt, dAluOp, dImm, dT, fdSeqNextPC);
 	 
 	 // Decode
 	 wire dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dSetx, dBex;
@@ -145,7 +152,9 @@ module processor(
 	 -----------------------------------------------
 	 */
 	 wire[11:0] dxSeqNextPC;
-	 wire[4:0] xOpcode, xRd, xShamt, xAluOp, xImm, xT;
+	 wire[4:0] xOpcode, xRd, xShamt, xAluOp;
+	 wire[16:0] xImm;
+	 wire[26:0] xT;
 	 wire[31:0] operandA, operandB;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
@@ -198,10 +207,13 @@ module processor(
 	 ======================
 	 */
 	 // Choose correct next PC
-	 wire[31:0] xBranchPC;
+	 wire[31:0] extDXSeqNextPC, xBranchPC;
 	 wire xCout, xIType, xJIType;
 	 
-	 claAdder xAdder(dxSeqNextPC, extendedImm, 1'b0, xBranchPC, xCout);
+	 assign extDXSeqNextPC[11:0] = dxSeqNextPC;
+	 assign extDXSeqNextPC[31:12] = 20'd0;
+	 
+	 claAdder xAdder(extDXSeqNextPC, extendedImm, 1'b0, xBranchPC, xCout);
 	 
 	 or orI(xIType, xBne, xBlt);
 	 or orJI(xJIType, xJ, xJal, xBex);
@@ -225,7 +237,7 @@ module processor(
 	 wire[31:0] xO, extendedT;
 	 wire xWReg;
 	 
-	 signExtenderJI sxT(extendedT, xT);
+	 signExtenderJI sxT(xT, extendedT);
 	 assign xO = xSetx ? extendedT : (xJal ? dxSeqNextPC : aluOut);
 	 
 	 or orXWReg(xWReg, xR, xAddi, xLw, xJal, xSetx);
@@ -253,7 +265,8 @@ module processor(
 	 -----------------------------------------------
 	 */
 	 wire[31:0] wO, wD;
-	 wire wWReg, wRd, wLw;
+	 wire[4:0] wRd;
+	 wire wWReg, wLw;
 	 
 	 mwLatch mw(clock, mO, q_dmem, mWReg, mLw, mRd, 1'b1, reset,
 				   wO, wD, wWReg, wLw, wRd);

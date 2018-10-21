@@ -15,6 +15,6 @@ module xmLatch(clock, oIn, dIn, wMemIn, wRegIn, lwIn, rdIn, inEnabled, reset,
 	reg5 rdReg(clock, inEnabled, reset, rdIn, rdOut);
 	dffe_ref wMem(wMemOut, wMemIn, clock, inEnabled, reset);
 	dffe_ref wReg(wRegOut, wRegIn, clock, inEnabled, reset);
-	dffe_ref wReg(lwOut, lwIn, clock, inEnabled, reset);
+	dffe_ref lw(lwOut, lwIn, clock, inEnabled, reset);
 	
 endmodule
