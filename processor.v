@@ -98,14 +98,14 @@ module processor(
 	 -----------------------------------------------
 	 */
 	 wire [11:0] nextPC, curPC, seqNextPC, branchPC;
-	 wire inePC, branchBool;
+	 wire fCout, branchBool;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
 	 pcLatch pc(clock, 1'b1, reset, nextPC, curPC);
 	 
 	 assign address_imem = curPC;
 	 
-	 addsub pcALU(curPC, 32'd12, 1'b1, seqNextPC, inePC);
+	 claAdder pcAdder(curPC, 32'd12, 1'b0, seqNextPC, fCout);
 	 
 	 assign nextPC = branchBool ? branchPC : seqNextPC;
 	 
@@ -124,14 +124,16 @@ module processor(
 	 fdLatch fd(clock, q_imem, seqNextPC, 1'b1, reset, 
 					dOpcode, rawRd, rawRs, rt, dShamt, dAluOp, dImm, dT, fdSeqNextPC);
 	 
+	 // Decode
 	 wire dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dSetx, dBex;
 	 opDecoder dOpDecoder(dOpcode, dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dSetx, dBex);
 	 
+	 // Reassign register read sources and destination if needed
 	 or rdOr(readRd, dSw, dBne, dJr, dBlt);
 	 or rtOr(rsToRd, dBne, dBlt);
 	 
-	 assign dRd = dSw ? rawRs : rawRd;
-	 assign rs = readRd ? rawRd : rawRs;
+	 assign dRd = dSw ? rawRs : (dSetx ? 5'd30 : (dJal ? 5'd31 : rawRd));
+	 assign rs = readRd ? rawRd : (dBex ? 5'd30 : rawRs);
 	 assign rt = rsToRd ? rawRs : rawRt;
 	 
 	 assign ctrl_readRegA = rs;
@@ -150,5 +152,117 @@ module processor(
 	 dxLatch dx(clock, fdSeqNextPC, data_readRegA, data_readRegB, dOpcode, dRd, dShamt, dAluOp, dImm, dT, 1'b1, reset, 
 					dxSeqNextPC, operandA, operandB, xOpcode, xRd, xShamt, xAluOp, xImm, xT);
 	 
+	 // Decode
+	 wire xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xSetx, xBex;
+	 opDecoder xOpDecoder(xOpcode, xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xSetx, xBex);
+	 
+	 // Sign extend for imm
+	 wire[31:0] extendedImm;
+	 
+	 signExtender sxImm(xImm, extendedImm);
+	 
+	 /*
+	 ======================
+	 ALU stuff
+	 ======================
+	 */
+	 
+	 // Set up ALU
+	 wire[31:0] aluInA, aluInB, aluOut;
+	 wire[4:0] aluOp, shamt;
+	 wire xINE, xILT, xOVF;
+	 
+	 alu mainAlu(aluInA, aluInB, aluOp, shamt, aluOut, xINE, xILT, xOVF);
+	 
+	 // Set up input A
+	 assign aluInA = operandA;
+	 
+	 // Set up input B
+	 wire useImm;
+	 
+	 or orUseImm(useImm, xAddi, xSw, xLw);
+	 
+	 assign aluInB = xBex ? 32'd0 : (useImm ? extendedImm : operandB);
+	 
+	 // Set up alu opcode
+	 
+	 assign aluOp = xR ? xAluOp : 5'd0;
+	 
+	 // Set up alu shamt
+	 
+	 assign shamt = xShamt;
+	 
+	 /*
+	 ======================
+	 Flow control
+	 ======================
+	 */
+	 // Choose correct next PC
+	 wire[31:0] xBranchPC;
+	 wire xCout, xIType, xJIType;
+	 
+	 claAdder xAdder(dxSeqNextPC, extendedImm, 1'b0, xBranchPC, xCout);
+	 
+	 or orI(xIType, xBne, xBlt);
+	 or orJI(xJIType, xJ, xJal, xBex);
+	 
+	 assign branchPC = xIType ? xBranchPC[11:0] : (xJIType ? xT[11:0] : operandA[11:0]);
+	 
+	 // Determine whether to jump or not
+	 wire isBNE, isBLT;
+	 
+	 and andBNE(isBNE, xBne, xINE);
+	 and andNLT(isBLT, xBlt, xILT);
+	 
+	 or orBranchBool(branchBool, isBNE, isBLT, xJ, xJal, xJr, xBex);
+	 
+	 /*
+	 ======================
+	 Set up for M
+	 ======================
+	 */
+	 
+	 wire[31:0] xO, extendedT;
+	 wire xWReg;
+	 
+	 signExtenderJI sxT(extendedT, xT);
+	 assign xO = xSetx ? extendedT : (xJal ? dxSeqNextPC : aluOut);
+	 
+	 or orXWReg(xWReg, xR, xAddi, xLw, xJal, xSetx);
+	 
+	 
+	 /*
+	 -----------------------------------------------
+	 M logic
+	 -----------------------------------------------
+	 */
+	 wire[31:0] mO, mMemQ;
+	 wire[4:0] mRd;
+	 wire mWReg, mLw;
+	 
+	 // Changes every cycle for now i.e. no stalling yet
+	 xmLatch xm(clock, xO, operandA, xSw, xWReg, xLw, xRd, 1'b1, reset, 
+					mO, data, wren, mWReg, mLw, mRd);
+	 
+	 assign address_dmem = mO[11:0];
+	 assign mMemQ = q_dmem;
+	 
+	 /*
+	 -----------------------------------------------
+	 W logic
+	 -----------------------------------------------
+	 */
+	 wire[31:0] wO, wD;
+	 wire wWReg, wRd, wLw;
+	 
+	 mwLatch mw(clock, mO, q_dmem, mWReg, mLw, mRd, 1'b1, reset,
+				   wO, wD, wWReg, wLw, wRd);
+					
+	 wire[31:0] wRegData;
+	 assign wRegData = mLw ? wD : wO;
+	 
+	 assign ctrl_writeEnable = wWReg;
+	 assign ctrl_writeReg = wRd;
+	 assign data_writeReg = wRegData;
 
 endmodule
