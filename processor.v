@@ -93,19 +93,26 @@ module processor(
     /* YOUR CODE STARTS HERE */
 	 
 	 /*
-	 -----------------------------------------------
+	 ----------------------------------------------------------------------------------------------
+	 Wire stuff
+	 ----------------------------------------------------------------------------------------------
+	 */
+	 
+	 wire pcStall, fdStall;
+	 wire fdReset;
+	 
+	 
+	 /*
+	 ----------------------------------------------------------------------------------------------
 	 F logic
-	 -----------------------------------------------
+	 ----------------------------------------------------------------------------------------------
 	 */
 	 wire [31:0] extendedCur, seqNextPC;
 	 wire [11:0] nextPC, curPC, branchPC;
-	 wire fCout, branchBool, firstCycle, isFirstCycle;
-	 
-	 dffe_ref initCycle(isFirstCycle, firstCycle, clock, 1'b1, reset);
-	 assign firstCycle = 1'b1;
+	 wire fCout, branchBool;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
-	 pcLatch pc(clock, isFirstCycle, reset, nextPC, curPC);
+	 pcLatch pc(clock, 1'b1, reset, nextPC, curPC);
 	 
 	 assign address_imem = curPC;
 	 
@@ -117,9 +124,9 @@ module processor(
 	 assign nextPC = branchBool ? branchPC : seqNextPC[11:0];
 	 
 	 /*
-	 -----------------------------------------------
+	 ----------------------------------------------------------------------------------------------
 	 D logic
-	 -----------------------------------------------
+	 ----------------------------------------------------------------------------------------------
 	 */
 	 wire[4:0] dOpcode, rawRd, dRd, rawRs, rs, rawRt, rt, dShamt, dAluOp;
 	 wire[16:0] dImm;
@@ -128,7 +135,7 @@ module processor(
 	 wire readRd, rsToRd;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
-	 fdLatch fd(clock, q_imem, seqNextPC[11:0], 1'b1, reset, 
+	 fdLatch fd(clock, q_imem, seqNextPC[11:0], ~fdStall, fdReset, 
 					dOpcode, rawRd, rawRs, rawRt, dShamt, dAluOp, dImm, dT, fdSeqNextPC);
 	 
 	 // Decode
@@ -136,30 +143,30 @@ module processor(
 	 opDecoder dOpDecoder(dOpcode, dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dSetx, dBex);
 	 
 	 // Reassign register read sources and destination if needed
-	 or rdOr(readRd, dSw, dBne, dJr, dBlt);
+	 or rdOr(readRd, dBne, dJr, dBlt);
 	 or rtOr(rsToRd, dBne, dBlt);
 	 
-	 assign dRd = dSw ? rawRs : (dSetx ? 5'd30 : (dJal ? 5'd31 : rawRd));
+	 assign dRd = dSetx ? 5'd30 : (dJal ? 5'd31 : rawRd);
 	 assign rs = readRd ? rawRd : (dBex ? 5'd30 : rawRs);
-	 assign rt = rsToRd ? rawRs : rawRt;
+	 assign rt = dSw ? rawRd : (rsToRd ? rawRs : rawRt);
 	 
 	 assign ctrl_readRegA = rs;
 	 assign ctrl_readRegB = rt;
 	 
 	 /*
-	 -----------------------------------------------
+	 ----------------------------------------------------------------------------------------------
 	 X logic
-	 -----------------------------------------------
+	 ----------------------------------------------------------------------------------------------
 	 */
 	 wire[11:0] dxSeqNextPC;
-	 wire[4:0] xOpcode, xRd, xShamt, xAluOp;
+	 wire[4:0] xOpcode, xRd, xShamt, xAluOp, xRs, xRt;
 	 wire[16:0] xImm;
 	 wire[26:0] xT;
 	 wire[31:0] operandA, operandB;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
-	 dxLatch dx(clock, fdSeqNextPC, data_readRegA, data_readRegB, dOpcode, dRd, dShamt, dAluOp, dImm, dT, 1'b1, reset, 
-					dxSeqNextPC, operandA, operandB, xOpcode, xRd, xShamt, xAluOp, xImm, xT);
+	 dxLatch dx(clock, fdSeqNextPC, data_readRegA, data_readRegB, dOpcode, dRd, dShamt, dAluOp, dImm, dT, rs, rt, 1'b1, reset, 
+					dxSeqNextPC, operandA, operandB, xOpcode, xRd, xShamt, xAluOp, xImm, xT, xRs, xRt);
 	 
 	 // Decode
 	 wire xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xSetx, xBex;
@@ -244,25 +251,25 @@ module processor(
 	 
 	 
 	 /*
-	 -----------------------------------------------
+	 ----------------------------------------------------------------------------------------------
 	 M logic
-	 -----------------------------------------------
+	 ----------------------------------------------------------------------------------------------
 	 */
-	 wire[31:0] mO, mMemQ;
-	 wire[4:0] mRd;
-	 wire mWReg, mLw;
+	 wire[31:0] mO, mD;
+	 wire[4:0] mRd, mRs;
+	 wire mWReg, mSw, mLw;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
-	 xmLatch xm(clock, xO, operandA, xSw, xWReg, xLw, xRd, 1'b1, reset, 
-					mO, data, wren, mWReg, mLw, mRd);
+	 xmLatch xm(clock, xO, mD, xSw, xWReg, xLw, xRd, xRs, 1'b1, reset, 
+					mO, data, mSw, mWReg, mLw, mRd, mRs);
 	 
 	 assign address_dmem = mO[11:0];
-	 assign mMemQ = q_dmem;
+	 assign wren = mSw;
 	 
 	 /*
-	 -----------------------------------------------
+	 ----------------------------------------------------------------------------------------------
 	 W logic
-	 -----------------------------------------------
+	 ----------------------------------------------------------------------------------------------
 	 */
 	 wire[31:0] wO, wD;
 	 wire[4:0] wRd;
@@ -272,10 +279,41 @@ module processor(
 				   wO, wD, wWReg, wLw, wRd);
 					
 	 wire[31:0] wRegData;
-	 assign wRegData = mLw ? wD : wO;
+	 assign wRegData = wLw ? wD : wO;
 	 
 	 assign ctrl_writeEnable = wWReg;
 	 assign ctrl_writeReg = wRd;
 	 assign data_writeReg = wRegData;
+	 
+	 /*
+	 ----------------------------------------------------------------------------------------------
+	 Stalling and Flushing
+	 ----------------------------------------------------------------------------------------------
+	 */
+	 assign fdStall = branchBool;
+//	 or orFDStall(fdStall, branchBool);
+//	 assign dxStall = branchBool;
+//	 or orDXStall(dxStall, branchBool);
+	 or orFDReset(fdReset, reset, branchBool);
+//	 or orDXReset(dxReset, reset, branchBool);
+	 
+	 /*
+	 ----------------------------------------------------------------------------------------------
+	 Bypasses
+	 ----------------------------------------------------------------------------------------------
+	 */
+	 
+	 /*
+	 ======================
+	 Bypasses for M
+	 ======================
+	 */
+	 wire wmBypass, wmRDMatch;
+	 
+	 regEqual regEqualWMRD(wRd, mRd, wmRDMatch);
+	 and andWMBypass(wmBypass, reqEqual, mSw);
+	 
+	 assign mD = wmBypass ? wRegData : operandB;
+	 
 
 endmodule

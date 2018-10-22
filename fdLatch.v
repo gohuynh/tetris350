@@ -9,20 +9,22 @@ module fdLatch(clock, inst, seqNextPcIn, inEnabled, reset,
 	output[26:0] t;
 	output[11:0] seqNextPcOut;
 	
-	wire[31:0] curInst;
+	wire[31:0] curInst, instSave;
+	
+	assign instSave = inEnabled ? inst : curInst;
 	
 	// Latch data
 	pcLatch pc(clock, inEnabled, reset, seqNextPcIn, seqNextPcOut);
-	reg32 instReg(clock, inEnabled, reset, inst, curInst);
+	reg32 instReg(clock, 1'b1, reset, instSave, curInst);
 	
-	assign opcode = curInst[31:27];
-	assign rd = curInst[26:22];
-	assign rs = curInst[21:17];
-	assign rt = curInst[16:12];
-	assign shamt = curInst[11:7];
-	assign aluOp = curInst[6:2];
-	assign imm = curInst[16:0];
-	assign t = curInst[26:0];
+	assign opcode = inEnabled ? inst[31:27] : curInst[31:27];
+	assign rd = inEnabled ? inst[26:22] : curInst[26:22];
+	assign rs = inEnabled ? inst[21:17] : curInst[21:17];
+	assign rt = inEnabled ? inst[16:12] : curInst[16:12];
+	assign shamt = inEnabled ? inst[11:7] : curInst[11:7];
+	assign aluOp = inEnabled ? inst[6:2] : curInst[6:2];
+	assign imm = inEnabled ? inst[16:0] : curInst[16:0];
+	assign t = inEnabled ? inst[26:0] : curInst[26:0];
 
 
 endmodule

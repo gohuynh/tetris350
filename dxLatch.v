@@ -1,16 +1,16 @@
-module dxLatch(clock, seqNextPcIn, inA, inB, opcodeIn, rdIn, shamtIn, aluopIn, immIn, tIn, inEnabled, reset, 
-					seqNextPcOut, operandA, operandB, opcodeOut, rdOut, shamtOut, aluopOut, immOut, tOut);
+module dxLatch(clock, seqNextPcIn, inA, inB, opcodeIn, rdIn, shamtIn, aluopIn, immIn, tIn, rsIn, rtIn, inEnabled, reset, 
+					seqNextPcOut, operandA, operandB, opcodeOut, rdOut, shamtOut, aluopOut, immOut, tOut, rsOut, rtOut);
 	
 	input clock, inEnabled, reset;
 	input[11:0] seqNextPcIn;
 	input[31:0] inA, inB;
-	input[4:0] opcodeIn, rdIn, shamtIn, aluopIn;
+	input[4:0] opcodeIn, rdIn, shamtIn, aluopIn, rsIn, rtIn;
 	input[16:0] immIn;
 	input[26:0] tIn;
 	
 	output[11:0] seqNextPcOut;
 	output[31:0] operandA, operandB;
-	output[4:0] opcodeOut, rdOut, shamtOut, aluopOut;
+	output[4:0] opcodeOut, rdOut, shamtOut, aluopOut, rsOut, rtOut;
 	output[16:0] immOut;
 	output[26:0] tOut;
 	
@@ -25,6 +25,8 @@ module dxLatch(clock, seqNextPcIn, inA, inB, opcodeIn, rdIn, shamtIn, aluopIn, i
 	reg5 aluopReg(clock, inEnabled, reset, aluopIn, aluopOut);
 	reg17 immReg(clock, inEnabled, reset, immIn, immOut);
 	reg27 tReg(clock, inEnabled, reset, tIn, tOut);
+	reg5 rsReg(clock, inEnabled, reset, rsIn, rsOut);
+	reg5 rtReg(clock, inEnabled, reset, rtIn, rtOut);
 	
 	
 endmodule
