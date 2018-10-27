@@ -166,7 +166,7 @@ module processor(
 	 ----------------------------------------------------------------------------------------------
 	 */
 	 wire[11:0] dxSeqNextPC;
-	 wire[4:0] xOpcode, xRd, xShamt, xAluOp, xRs, xRt;
+	 wire[4:0] xOpcode, xRd, xShamt, xAluOp, xRs, xRt, xRdOriginal;
 	 wire[16:0] xImm;
 	 wire[26:0] xT;
 	 wire[31:0] operandA, operandB;
@@ -174,7 +174,7 @@ module processor(
 	 
 	 // Changes every cycle for now i.e. no stalling yet
 	 dxLatch dx(clock, fdSeqNextPC, data_readRegA, data_readRegB, dOpcode, dRd, dShamt, dAluOp, dImm, dT, rs, rt, 1'd1, dxReset, 
-					dxSeqNextPC, operandA, operandB, xOpcode, xRd, xShamt, xAluOp, xImm, xT, xRs, xRt);
+					dxSeqNextPC, operandA, operandB, xOpcode, xRdOriginal, xShamt, xAluOp, xImm, xT, xRs, xRt);
 	 
 	 // Decode
 	 wire xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xSetx, xBex;
@@ -192,11 +192,11 @@ module processor(
 	 */
 	 
 	 // Set up ALU
-	 wire[31:0] aluInA, aluInB, aluOut, mBypass, wBypass, xD;
+	 wire[31:0] aluInA, aluInB, aluOut, mBypass, wBypass, xD, aluOutOriginal;
 	 wire[4:0] aluOp, shamt;
 	 wire xINE, xILT, xOVF, mBypassABool, mBypassBBool, wBypassABool, wBypassBBool;
 	 
-	 alu mainAlu(aluInA, aluInB, aluOp, shamt, aluOut, xINE, xILT, xOVF);
+	 alu mainAlu(aluInA, aluInB, aluOp, shamt, aluOutOriginal, xINE, xILT, xOVF);
 	 
 	 // Set up input A
 	 assign aluInA = mBypassABool ? mBypass : (wBypassABool ? wBypass : operandA);
@@ -216,6 +216,13 @@ module processor(
 	 // Set up alu shamt
 	 
 	 assign shamt = xShamt;
+	 
+	 /*
+	 ======================
+	 Check for exceptions
+	 ======================
+	 */
+	 errorControl xExceptions(xOVF, xR, xAluOp, xRdOriginal, aluOutOriginal, xRd, aluOut);
 	 
 	 /*
 	 ======================
