@@ -19,7 +19,7 @@ module dffe_ref(q, d, clk, en, clr);
    end
 
    //Set value of q on positive edge of the clock or clear
-   always @(posedge clk or posedge clr) begin
+   always @(posedge clk) begin // or posedge clr
        //If clear is high, set q to 0
        if (clr) begin
            q <= 1'b0;

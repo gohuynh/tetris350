@@ -12,13 +12,15 @@ module skeleton_tb();
 						, dut.my_regfile.reg0.out, dut.my_regfile.reg1.out, dut.my_regfile.reg2.out, dut.my_regfile.reg3.out, 
 						dut.my_regfile.reg4.out, dut.my_regfile.reg5.out, dut.my_regfile.reg6.out, dut.my_regfile.reg7.out, dut.my_regfile.reg8.out, dut.my_regfile.reg9.out);
 			clk = 1'b0;    // at time 0
+			reset = 1'b0;
 			#1000;
 			$stop;
 		end
 		
 	always@(posedge clk or negedge clk)
 		begin
-			$display($time, "%10d %10d %10d %10d %10d", dut.my_processor.address_imem, dut.my_processor.dOpcode, dut.my_processor.aluOut, dut.my_processor.mO, dut.my_processor.wRegData);
+//			$display($time, "%10d %10d %10d %10d %10d %10d %10d %10d", dut.my_processor.address_imem, dut.my_processor.dOpcode, dut.my_processor.xRs, dut.my_processor.xRt, dut.my_processor.xRd, dut.my_processor.wRd, dut.my_processor.mRd, dut.my_processor.xRd);//dut.my_processor.aluOut, dut.my_processor.mO, dut.my_processor.wRegData);
+			$display($time, "%10d %10d %10d %10d %10d", dut.my_processor.address_imem, dut.my_processor.dOpcode, dut.my_processor.xOpcode, dut.my_processor.aluInA, dut.my_processor.aluInB);
 		end
 	always@(posedge clk)
 		begin
