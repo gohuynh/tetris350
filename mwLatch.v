@@ -11,9 +11,8 @@ module mwLatch(clock, oIn, dIn, wRegIn, lwIn, rdIn, inEnabled, reset,
 	
 	// Latch Data
 	reg32 o(clock, inEnabled, reset, oIn, oOut);
-//	reg32 d(clock, inEnabled, reset, dIn, dOut);
-	// Never really need to stall in mw? Always output data from RAM as fast as possible then?
-	assign dOut = dIn;
+	reg32 d(clock, inEnabled, reset, dIn, dOut);
+//	assign dOut = dIn;
 	reg5 rdReg(clock, inEnabled, reset, rdIn, rdOut);
 	dffe_ref wReg(wRegOut, wRegIn, clock, inEnabled, reset);
 	dffe_ref lw(lwOut, lwIn, clock, inEnabled, reset);

@@ -47,6 +47,7 @@ module alu(data_operandA, data_operandB, ctrl_ALUopcode, ctrl_shiftamt, data_res
 							x[8],x[9],x[10],x[11],x[12],x[13],x[14],x[15],
 							x[16],x[17],x[18],x[19],x[20],x[21],x[22],x[23],
 							x[24],x[25],x[26],x[27],x[28],x[29],x[30],x[31]);
+	
 	not notequal(isNotEqual, equal);
 	
 	// Check overflow

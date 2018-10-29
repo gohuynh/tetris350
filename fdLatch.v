@@ -1,6 +1,6 @@
-module fdLatch(clock, instIn, seqNextPcIn, inEnabled, reset, 
-					opcode, rd, rs, rt, shamt, aluOp, imm, t, seqNextPcOut);
-	input[31:0] instIn;
+module fdLatch(clock, inst, seqNextPcIn, inEnabled, reset, 
+					opcode, rd, rs, rt, shamt, aluOp, imm, t, seqNextPcOut, instOut);
+	input[31:0] inst;
 	input[11:0] seqNextPcIn;
 	input clock, inEnabled, reset;
 	
@@ -8,31 +8,23 @@ module fdLatch(clock, instIn, seqNextPcIn, inEnabled, reset,
 	output[16:0] imm;
 	output[26:0] t;
 	output[11:0] seqNextPcOut;
+	output[31:0] instOut;
 	
-	wire[31:0] outInst, curInst, inst;
-	wire resetLatch, enableLatch, enable;
-	
-	assign inst = ~resetLatch ? instIn : 32'd0;
-	and andEnable(enable, enableLatch, inEnabled);
+	wire[31:0] curInst;
 	
 	// Latch data
 	pcLatch pc(clock, inEnabled, reset, seqNextPcIn, seqNextPcOut);
-	reg32 instReg(clock, enable, reset, inst, outInst);
+	reg32 instReg(clock, inEnabled, reset, inst, curInst);
 	
-	// Reset register
-	dffe_ref dffReset(resetLatch, reset, clock, 1'd1, 1'd0);
-	dffe_ref dffEnable(enableLatch, inEnabled, ~clock, 1'd1, 1'd0);
+	assign opcode = curInst[31:27];
+	assign rd = curInst[26:22];
+	assign rs = curInst[21:17];
+	assign rt = curInst[16:12];
+	assign shamt = curInst[11:7];
+	assign aluOp = curInst[6:2];
+	assign imm = curInst[16:0];
+	assign t = curInst[26:0];
 	
-	assign curInst = reset ? 32'd0 : outInst;
+	assign instOut = inst;
 	
-	assign opcode = enable ? inst[31:27] : curInst[31:27];
-	assign rd = enable ? inst[26:22] : curInst[26:22];
-	assign rs = enable ? inst[21:17] : curInst[21:17];
-	assign rt = enable ? inst[16:12] : curInst[16:12];
-	assign shamt = enable ? inst[11:7] : curInst[11:7];
-	assign aluOp = enable ? inst[6:2] : curInst[6:2];
-	assign imm = enable ? inst[16:0] : curInst[16:0];
-	assign t = enable ? inst[26:0] : curInst[26:0];
-	
-
 endmodule

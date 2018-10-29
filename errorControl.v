@@ -9,7 +9,7 @@ module errorControl(overflow, rType, aluOp, rdIn, dIn, rdOut, dOut);
 	wire[31:0] opcode, exception;
 	wire add, addi;
 	
-	assign rdOut = overflow ? 32'd30 : rdIn;
+	assign rdOut = overflow ? 5'd30 : rdIn;
 	
 	decoder5to32 decodeOp(aluOp, 1'b1, opcode);
 	and andAdd(add, rType, opcode[0]);
