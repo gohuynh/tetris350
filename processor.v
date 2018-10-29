@@ -69,13 +69,9 @@ module processor(
     ctrl_readRegB,                  // O: Register to read from port B of regfile
     data_writeReg,                  // O: Data to write to for regfile
     data_readRegA,                  // I: Data from port A of regfile
-    data_readRegB,                   // I: Data from port B of regfile
-	 dOpcode,
-	 aluOut,
-	 mO
+    data_readRegB                   // I: Data from port B of regfile
+
 );
-	output[4:0] dOpcode;
-	output[31:0] aluOut, mO;
     // Control signals
     input clock, reset;
 
@@ -194,10 +190,10 @@ module processor(
 	 wire[16:0] xImm;
 	 wire[26:0] xT;
 	 wire[31:0] operandA, operandB;
-	 wire dxReset;
+	 wire dxReset, dxStall;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
-	 dxLatch dx(clock, fdSeqNextPC, data_readRegA, data_readRegB, dOpcode, dRd, dShamt, dAluOp, dImm, dT, rs, rt, 1'd1, dxReset, 
+	 dxLatch dx(clock, fdSeqNextPC, data_readRegA, data_readRegB, dOpcode, dRd, dShamt, dAluOp, dImm, dT, rs, rt, ~dxStall, dxReset, 
 					dxSeqNextPC, operandA, operandB, xOpcode, xRdOriginal, xShamt, xAluOp, xImm, xT, xRs, xRt);
 	 
 	 // Decode
@@ -257,10 +253,36 @@ module processor(
 	 
 	 /*
 	 ======================
+	 Mult/Div stuff
+	 ======================
+	 */
+	 wire xMult, xDiv, xMultOp, xDivOp, xMDOVF, xMDReady, xMulDiv, xMDException, mdStall;
+	 wire[31:0] xMDOut;
+	 
+	 assign xMultOp = aluOp === 5'b00110 ? 1'b1 : 1'b0;
+	 assign xDivOp = aluOp === 5'b00111 ? 1'b1 : 1'b0;
+	 
+	 dffe_ref xMDCalculating(mdCalculating, mdStall, clock, 1'b1, reset);
+	 
+	 and andXMult(xMult, xMultOp, xR, ~mdCalculating);
+	 and andXDiv(xDiv, xDivOp, xR, ~mdCalculating);
+	 or orXMulDiv(xMulDiv, xMult, xDiv, mdCalculating);
+	 
+	 multdiv xMultDiv(aluInA, aluInB, xMult, xDiv, clock, xMDOut, xMDOVF, xMDReady);
+	 
+	 /*
+	 ======================
 	 Check for exceptions
 	 ======================
 	 */
-	 errorControl xExceptions(xOVF, xR, xAluOp, xRdOriginal, aluOutOriginal, xRd, aluOut);
+//	 errorControl xExceptions(xOVF, xR, xAluOp, xRdOriginal, aluOutOriginal, xRd, aluOut);
+	 wire xAluOvf;
+	 wire[31:0] xExceptionDataIn;
+	 
+	 and andXMDException(xMDException, xMDOVF, xMDReady);
+	 assign xExceptionDataIn = xMulDiv ? xMDOut : aluOutOriginal;
+	 or orXAlueOvf(xAluOvf, xOVF, xMDException);
+	 errorControl xExceptions(xAluOvf, xR, xAluOp, xRdOriginal, xExceptionDataIn, xRd, aluOut);
 	 
 	 /*
 	 ======================
@@ -316,10 +338,10 @@ module processor(
 	 */
 	 wire[31:0] mO, dmemData;
 	 wire[4:0] mRd, mRs;
-	 wire mWReg, mSw, mLw;
+	 wire mWReg, mSw, mLw, xmStall, xmReset;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
-	 xmLatch xm(clock, xO, xD, xSw, xWReg, xLw, xRd, xRs, 1'b1, reset, 
+	 xmLatch xm(clock, xO, xD, xSw, xWReg, xLw, xRd, xRs, ~xmStall, xmReset, 
 					mO, mD, mSw, mWReg, mLw, mRd, mRs);
 	 
 	 assign address_dmem = mO[11:0];
@@ -403,7 +425,22 @@ module processor(
 	 Stalling
 	 ----------------------------------------------------------------------------------------------
 	 */
-	 wire dxRsMatch, dxRtMatch, dxRsNotStore, dxRdMatch, dxRDZero, stall, lwStall, nonZeroLW;
+	 
+	 /*
+	 ======================
+	 Stalling for Mult/Div
+	 ======================
+	 */	 
+	 and andMDStall(mdStall, xMulDiv, ~xMDReady);
+	 assign xmStall = mdStall;
+	 or orXmReset(xmReset, reset, mdStall);
+	 /*
+	 
+	 ======================
+	 Stalling for Loads
+	 ======================
+	 */
+	 wire dxRsMatch, dxRtMatch, dxRsNotStore, dxRdMatch, dxRDZero, stall, lwStall, mulDivStall;
 	 
 	 regEqual regEqualDXZero(xRd, 5'd0, dxRDZero);
 	 regEqual regEqualDXRS(xRd, adRs, dxRsMatch);
@@ -414,10 +451,9 @@ module processor(
 	 or orDXRDMatch(dxRdMatch, dxRsMatch, dxRsNotStore);
 	 and andLwStall(lwStall, dxRdMatch, nonZeroLW);
 	 
-	 dffe_ref regStall(stall, lwStall, clock, 1'd1, 1'd0);
-	 
-	 or orFdStall(fdStall, branchBool, lwStall);
-	 assign pcStall = lwStall;
+	 or orFdStall(fdStall, branchBool, lwStall, mdStall);
+	 or orPcStall(pcStall, lwStall, mdStall);
 	 or orDxReset(dxReset, lwStall, reset, branchBool);
+	 assign dxStall = mdStall;
 
 endmodule

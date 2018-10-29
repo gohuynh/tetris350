@@ -82,10 +82,8 @@ module skeleton(clock, reset, address_imem, dOpcode, aluOut, mO, data_writeReg);
         ctrl_readRegB,                  // O: Register to read from port B of regfile
         data_writeReg,                  // O: Data to write to for regfile
         data_readRegA,                  // I: Data from port A of regfile
-        data_readRegB,                   // I: Data from port B of regfile
-		  dOpcode,
-		  aluOut,
-		  mO
+        data_readRegB                   // I: Data from port B of regfile
+
     );
 
 endmodule
