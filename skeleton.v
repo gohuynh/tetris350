@@ -9,10 +9,8 @@
  * inspect which signals the processor tries to assert when.
  */
 
-module skeleton(clock, reset, address_imem, dOpcode, aluOut, mO, data_writeReg);
-	output[31:0] data_writeReg, mO, aluOut;
-	output[4:0]  dOpcode;
-	output[11:0] address_imem;
+module skeleton(clock, reset, data_writeReg);
+	output[31:0] data_writeReg;
     input clock, reset;
 
     /** IMEM **/
