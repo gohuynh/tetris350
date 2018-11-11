@@ -19,8 +19,8 @@ module skeleton_tb();
 		
 	always@(posedge clk or negedge clk)
 		begin
-//			$display($time, "%10d %10d %10d %10d %10d %10d %10d %10d", dut.my_processor.address_imem, dut.my_processor.dOpcode, dut.my_processor.xRs, dut.my_processor.xRt, dut.my_processor.xRd, dut.my_processor.wRd, dut.my_processor.mRd, dut.my_processor.xRd);//dut.my_processor.aluOut, dut.my_processor.mO, dut.my_processor.wRegData);
-			$display($time, "%10d %10d %10d %10d %10d", dut.my_processor.address_imem, dut.my_processor.dOpcode, dut.my_processor.xOpcode, dut.my_processor.mO, dut.my_processor.wRegData);
+			$display($time, "%10d %10d %10d %10d %10d %10d %10d %10d", dut.my_processor.address_imem, dut.my_processor.dOpcode, dut.my_processor.xOpcode, dut.my_processor.mO, dut.my_processor.wRegData, dut.my_processor.ctrl_readRegB, dut.my_processor.operandB, dut.my_processor.xD);
+//			$display($time, "%10d %10d %10d %10d %10d", dut.my_processor.address_imem, dut.my_processor.dOpcode, dut.my_processor.xOpcode, dut.my_processor.mO, dut.my_processor.wRegData);
 		end
 	always@(posedge clk)
 		begin

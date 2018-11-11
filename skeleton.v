@@ -9,8 +9,16 @@
  * inspect which signals the processor tries to assert when.
  */
 
-module skeleton(clock, reset, data_writeReg);
-	output[31:0] data_writeReg;
+module skeleton(clock, reset, regIn, dmemAddr, dmemData, dmemEn, dmemOut);
+	output[31:0] regIn, dmemData, dmemOut;
+	output[11:0] dmemAddr;
+	output dmemEn;
+	assign regIn = data_writeReg;
+	assign dmemAddr = address_dmem;
+	assign dmemData = data;
+	assign dmemEn = wren;
+	assign dmemOut = q_dmem;
+	
     input clock, reset;
 
     /** IMEM **/
@@ -81,7 +89,7 @@ module skeleton(clock, reset, data_writeReg);
         data_writeReg,                  // O: Data to write to for regfile
         data_readRegA,                  // I: Data from port A of regfile
         data_readRegB                   // I: Data from port B of regfile
-
+		
     );
 
 endmodule

@@ -70,7 +70,7 @@ module processor(
     data_writeReg,                  // O: Data to write to for regfile
     data_readRegA,                  // I: Data from port A of regfile
     data_readRegB                   // I: Data from port B of regfile
-
+	
 );
     // Control signals
     input clock, reset;
@@ -336,7 +336,7 @@ module processor(
 	 M logic
 	 ----------------------------------------------------------------------------------------------
 	 */
-	 wire[31:0] mO, dmemData;
+	 wire[31:0] mO, dmemData, mD;
 	 wire[4:0] mRd, mRs;
 	 wire mWReg, mSw, mLw, xmStall, xmReset;
 	 
