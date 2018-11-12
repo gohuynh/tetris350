@@ -61,6 +61,12 @@ module processor(
     data,                           // O: The data to write to dmem
     wren,                           // O: Write enable for dmem
     q_dmem,                         // I: The data from dmem
+	 
+	 // Dmem
+    address_imgmem,                   // O: The address of the data to get or put from/to imgmem
+    data_imgmem,                      // O: The data to write to imgmem
+    wren_imgmem,                      // O: Write enable for imgmem
+    q_imgmem,                         // I: The data from imgmem
 
     // Regfile
     ctrl_writeEnable,               // O: Write enable for regfile
@@ -84,6 +90,12 @@ module processor(
     output [31:0] data;
     output wren;
     input [31:0] q_dmem;
+	 
+	 // IMGmem
+    output [11:0] address_imgmem;
+    output [31:0] data_imgmem;
+    output wren_imgmem;
+    input [31:0] q_imgmem;
 
     // Regfile
     output ctrl_writeEnable;
@@ -256,7 +268,7 @@ module processor(
 	 Mult/Div stuff
 	 ======================
 	 */
-	 wire xMult, xDiv, xMultOp, xDivOp, xMDOVF, xMDReady, xMulDiv, xMDException, mdStall;
+	 wire xMult, xDiv, xMultOp, xDivOp, xMDOVF, xMDReady, xMulDiv, xMDException, mdStall, mdCalculating;
 	 wire[31:0] xMDOut;
 	 
 	 assign xMultOp = aluOp === 5'b00110 ? 1'b1 : 1'b0;
@@ -440,7 +452,7 @@ module processor(
 	 Stalling for Loads
 	 ======================
 	 */
-	 wire dxRsMatch, dxRtMatch, dxRsNotStore, dxRdMatch, dxRDZero, stall, lwStall, mulDivStall;
+	 wire dxRsMatch, dxRtMatch, dxRsNotStore, dxRdMatch, dxRDZero, stall, lwStall, mulDivStall, nonZeroLW;
 	 
 	 regEqual regEqualDXZero(xRd, 5'd0, dxRDZero);
 	 regEqual regEqualDXRS(xRd, adRs, dxRsMatch);
