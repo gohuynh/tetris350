@@ -92,10 +92,10 @@ module processor(
     input [31:0] q_dmem;
 	 
 	 // IMGmem
-    output [11:0] address_imgmem;
-    output [31:0] data_imgmem;
+    output [18:0] address_imgmem;
+    output [7:0] data_imgmem;
     output wren_imgmem;
-    input [31:0] q_imgmem;
+    input [7:0] q_imgmem;
 
     // Regfile
     output ctrl_writeEnable;

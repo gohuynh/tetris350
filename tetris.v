@@ -37,16 +37,17 @@ module tetris(clock,
     );
 	 
 	 /** IMGMEM **/
-    wire [19:0] addressA_imgmem, addressB_imgmem;
-    wire [23:0] dataA_imgmem, dataB_imgmem;
-    wire wrenA_imgmem, wrenB_imgmem;
-    wire [31:0] qA_imgmem, qB_imgmem;
+    wire [18:0] addressA_imgmem, addressB_imgmem;
+    wire [7:0] dataA_imgmem, dataB_imgmem;
+    wire wrenA_imgmem, wrenB_imgmem, VGA_CLK;
+    wire [7:0] qA_imgmem, qB_imgmem;
 	 assign wrenB_imgmem = 1'b0;
-	 assign dataB_imgmem = 24'd0;
-    imgmem my_imgmem(
+	 assign dataB_imgmem = 8'd0;
+    imgram my_imgmem(
         .address_a   (addressA_imgmem),       // address port for processor
 		  .address_b	(addressB_imgmem), 			// address port for vga
-        .clock       (~clock),                  // may need to invert the clock
+        .clock_a     (~clock),                  // may need to invert the clock
+		  .clock_b		(~VGA_CLK),
         .data_a	   (dataA_imgmem),    // data port for processor
 		  .data_b		(dataB_imgmem),	// data port for vga
         .wren_a	   (wrenA_imgmem),      // write enable
@@ -73,7 +74,7 @@ module tetris(clock,
     );
 	 
 	 // VGA
-	 wire DLY_RST, VGA_CTRL_CLK, AUD_CTRL_CLK, VGA_CLK;
+	 wire DLY_RST, VGA_CTRL_CLK, AUD_CTRL_CLK;
 	 Reset_Delay			r0	(.iCLK(clock),.oRESET(DLY_RST)	);
 	 VGA_Audio_PLL 		p1	(.areset(~DLY_RST),.inclk0(clock),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)	);
 	 vga_controller vga_ins	(.iRST_n(DLY_RST),
