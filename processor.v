@@ -62,7 +62,7 @@ module processor(
     wren,                           // O: Write enable for dmem
     q_dmem,                         // I: The data from dmem
 	 
-	 // Dmem
+	 // Imem
     address_imgmem,                   // O: The address of the data to get or put from/to imgmem
     data_imgmem,                      // O: The data to write to imgmem
     wren_imgmem,                      // O: Write enable for imgmem
@@ -75,7 +75,13 @@ module processor(
     ctrl_readRegB,                  // O: Register to read from port B of regfile
     data_writeReg,                  // O: Data to write to for regfile
     data_readRegA,                  // I: Data from port A of regfile
-    data_readRegB                   // I: Data from port B of regfile
+    data_readRegB,                   // I: Data from port B of regfile
+	 
+	 // Controller Inputs
+	 io_left,
+	 io_right,
+	 io_down,
+	 io_rotate_cw
 	
 );
     // Control signals
@@ -102,6 +108,9 @@ module processor(
     output [4:0] ctrl_writeReg, ctrl_readRegA, ctrl_readRegB;
     output [31:0] data_writeReg;
     input [31:0] data_readRegA, data_readRegB;
+	 
+	 // Controller Inputs
+	 input io_left, io_right, io_down, io_rotate_cw;
 
     /* YOUR CODE STARTS HERE */
 	 
@@ -157,8 +166,8 @@ module processor(
 					dOpcode, rawRd, rawRs, rawRt, dShamt, dAluOp, dImm, dT, fdSeqNextPC, instOut);
 	 
 	 // Decode
-	 wire dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dSetx, dBex;
-	 opDecoder dOpDecoder(dOpcode, dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dSetx, dBex);
+	 wire dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dRi, dSetx, dBex;
+	 opDecoder dOpDecoder(dOpcode, dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dRi, dSetx, dBex);
 	 
 	 // Reassign register read sources and destination if needed
 	 or rdOr(readRd, dBne, dJr, dBlt);
@@ -184,7 +193,7 @@ module processor(
 //	 assign adRt = dSw ? rawRd : (rsToRd ? rawRs : rawRt);
 	 
 	 // Filter out unintended source registers
-	 or orNoRs(noRs, dJ, dJal, dSetx);
+	 or orNoRs(noRs, dJ, dJal, dSetx, dRi);
 	 or orNeedRt(yesRt, dR, rsToRd, dSw);
 	 assign rs = noRs ? 5'd0 : adRs;
 	 assign rt = yesRt ? adRt : 5'd0;
@@ -209,8 +218,8 @@ module processor(
 					dxSeqNextPC, operandA, operandB, xOpcode, xRdOriginal, xShamt, xAluOp, xImm, xT, xRs, xRt);
 	 
 	 // Decode
-	 wire xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xSetx, xBex;
-	 opDecoder xOpDecoder(xOpcode, xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xSetx, xBex);
+	 wire xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xRi, xSetx, xBex;
+	 opDecoder xOpDecoder(xOpcode, xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xRi, xSetx, xBex);
 	 
 	 // Sign extend for imm
 	 wire[31:0] extendedImm;
@@ -284,6 +293,17 @@ module processor(
 	 
 	 /*
 	 ======================
+	 Input stuff
+	 ======================
+	 */
+	 wire[31:0] xInputRead;
+	 assign xInputRead[0] = io_left;
+	 assign xInputRead[1] = io_right;
+	 assign xInputRead[2] = io_down;
+	 assign xInputRead[3] = io_rotate_cw;
+	 
+	 /*
+	 ======================
 	 Check for exceptions
 	 ======================
 	 */
@@ -336,11 +356,16 @@ module processor(
 	 
 	 wire[31:0] xO, extendedT;
 	 wire xWReg;
+	 wire xUseAlu;
 	 
+	 and andXUseAlu(xUseAlu, ~xSetx, ~xJal, ~xRi);	 
 	 signExtenderJI sxT(xT, extendedT);
-	 assign xO = xSetx ? extendedT : (xJal ? dxSeqNextPC : aluOut);
+	 assign xO = xSetx ? extendedT : 32'dz;
+	 assign xO = xJal ? dxSeqNextPC : 32'dz;
+	 assign xO = xRi ? xInputRead : 32'dz;
+	 assign xO = xUseAlu ? aluOut : 32'dz;
 	 
-	 or orXWReg(xWReg, xR, xAddi, xLw, xJal, xSetx);
+	 or orXWReg(xWReg, xR, xAddi, xLw, xJal, xRi, xSetx);
 	 
 	 
 	 /*

@@ -4,19 +4,38 @@ module tetris(clock,
 	 VGA_HS,															//	VGA H_SYNC
 	 VGA_VS,															//	VGA V_SYNC
 	 VGA_BLANK,														//	VGA BLANK
-	 VGA_SYNC,														//	VGA SYNC
+//	 VGA_SYNC,														//	VGA SYNC
 	 VGA_R,   														//	VGA Red[9:0]
 	 VGA_G,	 														//	VGA Green[9:0]
-	 VGA_B															//	VGA Blue[9:0]
-//	 x1,
-//	 y1
+	 VGA_B,															//	VGA Blue[9:0]
+	 IO_left,
+	 IO_right,
+	 IO_down,
+	 IO_rotate_cw,
+	 IO_left_LED,
+	 IO_right_LED,
+	 IO_down_LED,
+	 IO_rotate_cw_LED
 	 );
-	
+	 
+	 input IO_left, IO_right, IO_down, IO_rotate_cw;
     input clock, reset;
-	 output VGA_CLK, VGA_HS, VGA_VS, VGA_BLANK, VGA_SYNC;
+	 output VGA_CLK, VGA_HS, VGA_VS, VGA_BLANK;//, VGA_SYNC;
 	 output [7:0] VGA_R, VGA_G, VGA_B;
-//	 output [31:0] x1, y1;
-
+	 output IO_left_LED, IO_right_LED, IO_down_LED, IO_rotate_cw_LED;
+	 
+	 wire left, right, down, rotate_cw;
+	 assign left = ~IO_left;
+	 assign right = ~IO_right;
+	 assign down = ~IO_down;
+	 assign rotate_cw = ~IO_rotate_cw;
+	 
+	 assign IO_left_LED = left;
+	 assign IO_right_LED = right;
+	 assign IO_down_LED = down;
+	 assign IO_rotate_cw_LED = rotate_cw;
+	 
+	 
     /** IMEM **/
     wire [11:0] address_imem;
     wire [31:0] q_imem;
@@ -67,37 +86,32 @@ module tetris(clock,
 	 wire [31:0] block1x, block1y, block2x, block2y, block3x, block3y, block4x, block4y;
 	 wire [31:0] score, blockType;
     regfile my_regfile(
-        clock,
-        ctrl_writeEnable,
-        ctrl_reset,
-        ctrl_writeReg,
-        ctrl_readRegA,
-        ctrl_readRegB,
-        data_writeReg,
-        data_readRegA,
-        data_readRegB,
-		  block1x, block1y,
-		  block2x, block2y,
-		  block3x, block3y,
-		  block4x, block4y,
-		  score,
-		  blockType
+        .clock(clock),
+        .ctrl_writeEnable(ctrl_writeEnable),
+        .ctrl_reset(ctrl_reset),
+        .ctrl_writeReg(ctrl_writeReg),
+        .ctrl_readRegA(ctrl_readRegA),
+        .ctrl_readRegB(ctrl_readRegB),
+        .data_writeReg(data_writeReg),
+        .data_readRegA(data_readRegA),
+        .data_readRegB(data_readRegB),
+		  .block1x(block1x),
+		  .block1y(block1y),
+		  .block2x(block2x),
+		  .block2y(block2y),
+		  .block3x(block3x),
+		  .block3y(block3y),
+		  .block4x(block4x),
+		  .block4y(block4y),
+		  .score(score),
+		  .blockType(blockType)
     );
-	 
-	 wire [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y;
-	 assign b1x = block1x;
-	 assign b1y = block1y;
-	 assign b2x = block2x;
-	 assign b2y = block2y;
-	 assign b3x = block3x;
-	 assign b3y = block3y;
-	 assign b4x = block4x;
-	 assign b4y = block4y;
 	 
 	 // VGA
 	 wire DLY_RST, VGA_CTRL_CLK, AUD_CTRL_CLK;
 	 Reset_Delay			r0	(.iCLK(clock),.oRESET(DLY_RST)	);
-	 VGA_Audio_PLL 		p1	(.areset(~DLY_RST),.inclk0(clock),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)	);
+//	 VGA_Audio_PLL 		p1	(.areset(~DLY_RST),.inclk0(clock),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)	);
+	 testpll					p1 (.areset(~DLY_RST), .inclk0(clock), .c0(VGA_CLK));
 	 vga_controller vga_ins	(.iRST_n(DLY_RST),
 									 .iVGA_CLK(VGA_CLK),
 									 .oBLANK_n(VGA_BLANK),
@@ -108,14 +122,14 @@ module tetris(clock,
 									 .r_data(VGA_R),
 									 .addr_imgmem(addressB_imgmem),
 									 .q_imgmem(qB_imgmem),
-									 .block1x(b1x),
-									 .block1y(b1y),
-									 .block2x(b2x),
-									 .block2y(b2y),
-									 .block3x(b3x),
-									 .block3y(b3y),
-									 .block4x(b4x),
-									 .block4y(b4y),
+									 .block1x(block1x),
+									 .block1y(block1y),
+									 .block2x(block2x),
+									 .block2y(block2y),
+									 .block3x(block3x),
+									 .block3y(block3y),
+									 .block4x(block4x),
+									 .block4y(block4y),
 									 .score(score),
 									 .blockType(blockType)
 									 );
@@ -149,11 +163,14 @@ module tetris(clock,
         ctrl_readRegB,                  // O: Register to read from port B of regfile
         data_writeReg,                  // O: Data to write to for regfile
         data_readRegA,                  // I: Data from port A of regfile
-        data_readRegB                   // I: Data from port B of regfile
+        data_readRegB,                   // I: Data from port B of regfile
+		  
+		  // Controller Inputs
+		  left,
+		  right,
+		  down,
+		  rotate_cw
 		  
     );
-	 
-//	 assign x1 = b1x;
-//	 assign y1 = b1y;
 
 endmodule

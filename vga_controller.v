@@ -32,7 +32,7 @@ output [7:0] r_data;
 ///////// ////                     
 reg [18:0] ADDR;
 reg [23:0] bgr_data;
-wire [9:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y;
+//reg [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y;
 wire VGA_CLK_n;
 wire cBLANK_n,cHS,cVS,rst;
 ////
@@ -43,17 +43,17 @@ video_sync_generator LTM_ins (.vga_clk(iVGA_CLK),
                               .HS(cHS),
                               .VS(cVS));
 ////
-always@(posedge iVGA_CLK)
-begin
-	b1x <= block1x[9:0];
-   b1y <= block1y[9:0];
-   b2x <= block2x[9:0];
-   b2y <= block2y[9:0];
-   b3x <= block3x[9:0];
-   b3y <= block3y[9:0];
-   b4x <= block4x[9:0];
-   b4y <= block4y[9:0];
-end
+//always@(posedge iVGA_CLK)
+//begin
+//	b1x <= block1x;
+//   b1y <= block1y;
+//   b2x <= block2x;
+//   b2y <= block2y;
+//   b3x <= block3x;
+//   b3y <= block3y;
+//   b4x <= block4x;
+//   b4y <= block4y;
+//end
 ////Addresss generator
 always@(posedge iVGA_CLK,negedge iRST_n)
 begin
@@ -81,22 +81,20 @@ imgrom	img_index_inst (
 wire [23:0] rgb_display;
 vga_processor myProcessor(.address(ADDR),
 								  .colorIn(bgr_data_raw),
-								  .b1x(b1x),
-								  .b1y(b1y),
-								  .b2x(b2x),
-								  .b2y(b2y),
-								  .b3x(b3x),
-								  .b3y(b3y),
-								  .b4x(b4x),
-								  .b4y(b4y),
+								  .b1x(block1x),
+								  .b1y(block1y),
+								  .b2x(block2x),
+								  .b2y(block2y),
+								  .b3x(block3x),
+								  .b3y(block3y),
+								  .b4x(block4x),
+								  .b4y(block4y),
 								  .score(score),
 								  .blockType(blockType),
 								  .colorOut(rgb_display)
 								  );
 //////latch valid data at falling edge;
-wire [23:0] t;
-assign t = b1x === 10'd50 ? rgb_display : 24'h00ff00;
-always@(posedge VGA_CLK_n) bgr_data <= t;
+always@(posedge VGA_CLK_n) bgr_data <= rgb_display;
 assign b_data = bgr_data[23:16];
 assign g_data = bgr_data[15:8];
 assign r_data = bgr_data[7:0]; 

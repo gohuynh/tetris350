@@ -68,16 +68,6 @@ module regfile (
 	reg32 reg30(clock, writeDecode[30], ctrl_reset, data_writeReg, r30);
 	reg32 reg31(clock, writeDecode[31], ctrl_reset, data_writeReg, r31);
 	
-//	mux32 read1(ctrl_readRegA, r0, r1, r2, r3, r4, r5, r6, r7,
-//	r8, r9, r10, r11, r12, r13, r14, r15,
-//	r16, r17, r18, r19, r20, r21, r22, r23,
-//	r24, r25, r26, r27, r28, r29, r30, r31, data_readRegA);
-//	
-//	mux32 read2(ctrl_readRegB, r0, r1, r2, r3, r4, r5, r6, r7,
-//	r8, r9, r10, r11, r12, r13, r14, r15,
-//	r16, r17, r18, r19, r20, r21, r22, r23,
-//	r24, r25, r26, r27, r28, r29, r30, r31, data_readRegB);
-	
 	decoder5to32 rDecodeA(ctrl_readRegA, 1'b1, readA);
 	decoder5to32 rDecodeB(ctrl_readRegB, 1'b1, readB);
 	
