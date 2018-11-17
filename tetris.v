@@ -8,11 +8,14 @@ module tetris(clock,
 	 VGA_R,   														//	VGA Red[9:0]
 	 VGA_G,	 														//	VGA Green[9:0]
 	 VGA_B															//	VGA Blue[9:0]
+//	 x1,
+//	 y1
 	 );
 	
     input clock, reset;
 	 output VGA_CLK, VGA_HS, VGA_VS, VGA_BLANK, VGA_SYNC;
 	 output [7:0] VGA_R, VGA_G, VGA_B;
+//	 output [31:0] x1, y1;
 
     /** IMEM **/
     wire [11:0] address_imem;
@@ -61,6 +64,8 @@ module tetris(clock,
     wire [4:0] ctrl_writeReg, ctrl_readRegA, ctrl_readRegB;
     wire [31:0] data_writeReg;
     wire [31:0] data_readRegA, data_readRegB;
+	 wire [31:0] block1x, block1y, block2x, block2y, block3x, block3y, block4x, block4y;
+	 wire [31:0] score, blockType;
     regfile my_regfile(
         clock,
         ctrl_writeEnable,
@@ -70,8 +75,24 @@ module tetris(clock,
         ctrl_readRegB,
         data_writeReg,
         data_readRegA,
-        data_readRegB
+        data_readRegB,
+		  block1x, block1y,
+		  block2x, block2y,
+		  block3x, block3y,
+		  block4x, block4y,
+		  score,
+		  blockType
     );
+	 
+	 wire [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y;
+	 assign b1x = block1x;
+	 assign b1y = block1y;
+	 assign b2x = block2x;
+	 assign b2y = block2y;
+	 assign b3x = block3x;
+	 assign b3y = block3y;
+	 assign b4x = block4x;
+	 assign b4y = block4y;
 	 
 	 // VGA
 	 wire DLY_RST, VGA_CTRL_CLK, AUD_CTRL_CLK;
@@ -86,7 +107,17 @@ module tetris(clock,
 									 .g_data(VGA_G),
 									 .r_data(VGA_R),
 									 .addr_imgmem(addressB_imgmem),
-									 .q_imgmem(qB_imgmem)
+									 .q_imgmem(qB_imgmem),
+									 .block1x(b1x),
+									 .block1y(b1y),
+									 .block2x(b2x),
+									 .block2y(b2y),
+									 .block3x(b3x),
+									 .block3y(b3y),
+									 .block4x(b4x),
+									 .block4y(b4y),
+									 .score(score),
+									 .blockType(blockType)
 									 );
 
     /** PROCESSOR **/
@@ -121,5 +152,8 @@ module tetris(clock,
         data_readRegB                   // I: Data from port B of regfile
 		  
     );
+	 
+//	 assign x1 = b1x;
+//	 assign y1 = b1y;
 
 endmodule
