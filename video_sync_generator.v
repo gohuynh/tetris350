@@ -68,16 +68,16 @@ begin
   end
     else
     begin
-      if (h_cnt==hori_line-1)
+      if (h_cnt==hori_line-11'd1)
       begin 
          h_cnt<=11'd0;
-         if (v_cnt==vert_line-1)
+         if (v_cnt==vert_line-10'd1)
             v_cnt<=10'd0;
          else
-            v_cnt<=v_cnt+1;
+            v_cnt<=v_cnt+10'd1;
       end
       else
-         h_cnt<=h_cnt+1;
+         h_cnt<=h_cnt+11'd1;
     end
 end
 /////
