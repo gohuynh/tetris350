@@ -15,8 +15,11 @@ module tetris(clock,
 	 IO_left_LED,
 	 IO_right_LED,
 	 IO_down_LED,
-	 IO_rotate_cw_LED
+	 IO_rotate_cw_LED,
+	 dataToReg
 	 );
+	 
+	 output [31:0] dataToReg;
 	 
 	 input IO_left, IO_right, IO_down, IO_rotate_cw;
     input clock, reset;
@@ -172,5 +175,7 @@ module tetris(clock,
 		  rotate_cw
 		  
     );
+	 
+	 assign dataToReg = data_writeReg;
 
 endmodule
