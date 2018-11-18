@@ -8,3 +8,6 @@
 !*.qpf
 !*.qsf
 !*.qip
+!MIPS/
+!ImageStuff/
+!*.s
