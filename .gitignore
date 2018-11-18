@@ -11,3 +11,4 @@
 !MIPS/
 !ImageStuff/
 !*.s
+!*.txt
