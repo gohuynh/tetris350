@@ -16,10 +16,14 @@ module tetris(clock,
 	 IO_right_LED,
 	 IO_down_LED,
 	 IO_rotate_cw_LED,
-	 dataToReg
+	 DEBUG_gamemode1,
+	 DEBUG_gamemode0
+//	 dataToReg
 	 );
 	 
-	 output [31:0] dataToReg;
+//	 output [31:0] dataToReg;
+	input DEBUG_gamemode1;
+	input DEBUG_gamemode0;
 	 
 	 input IO_left, IO_right, IO_down, IO_rotate_cw;
     input clock, reset;
@@ -87,7 +91,7 @@ module tetris(clock,
     wire [31:0] data_writeReg;
     wire [31:0] data_readRegA, data_readRegB;
 	 wire [31:0] block1x, block1y, block2x, block2y, block3x, block3y, block4x, block4y;
-	 wire [31:0] score, blockType;
+	 wire [31:0] score, blockType, screenMode;
     regfile my_regfile(
         .clock(clock),
         .ctrl_writeEnable(ctrl_writeEnable),
@@ -107,8 +111,15 @@ module tetris(clock,
 		  .block4x(block4x),
 		  .block4y(block4y),
 		  .score(score),
-		  .blockType(blockType)
+		  .blockType(blockType),
+		  .screenMode(screenMode)
     );
+	 
+	 wire [31:0] DEBUG_screenMode;
+	 assign DEBUG_screenMode[31] = 1'b0;
+	 assign DEBUG_screenMode[30] = DEBUG_gamemode1;
+	 assign DEBUG_screenMode[29] = DEBUG_gamemode0;
+	 assign DEBUG_screenMode[28:0] = 29'd0;
 	 
 	 // VGA
 	 wire DLY_RST, VGA_CTRL_CLK, AUD_CTRL_CLK;
@@ -134,7 +145,8 @@ module tetris(clock,
 									 .block4x(block4x),
 									 .block4y(block4y),
 									 .score(score),
-									 .blockType(blockType)
+									 .blockType(blockType),
+									 .screenMode(DEBUG_screenMode)
 									 );
 
     /** PROCESSOR **/
@@ -176,6 +188,6 @@ module tetris(clock,
 		  
     );
 	 
-	 assign dataToReg = data_writeReg;
+//	 assign dataToReg = data_writeReg;
 
 endmodule

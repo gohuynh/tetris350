@@ -9,7 +9,8 @@ module regfile (
 	 block3x, block3y,
 	 block4x, block4y,
 	 score,
-	 blockType
+	 blockType,
+	 screenMode
 );
 
    input clock, ctrl_writeEnable, ctrl_reset;
@@ -18,7 +19,7 @@ module regfile (
 
    output [31:0] data_readRegA, data_readRegB;
 	output [31:0] block1x, block1y, block2x, block2y, block3x, block3y, block4x, block4y;
-	output [31:0] score, blockType;
+	output [31:0] score, blockType, screenMode;
 
    /* YOUR CODE HERE */
 	// Writing wires
@@ -150,6 +151,7 @@ module regfile (
 	assign data_readRegA = aBypass ? data_writeReg : outDataA;
 	assign data_readRegB = bBypass ? data_writeReg : outDataB;
 	
+	assign screenMode = r19;
 	assign blockType = r20;
 	assign score = r21;
 	assign block1x = r22;

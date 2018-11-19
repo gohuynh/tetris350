@@ -13,7 +13,8 @@ module vga_controller(iRST_n,
 							 block3x, block3y,
 							 block4x, block4y,
 							 score,
-							 blockType
+							 blockType,
+							 screenMode
 							 );						 
 
 	
@@ -21,7 +22,7 @@ input iRST_n;
 input iVGA_CLK;
 input [7:0] q_imgmem;
 input [31:0] block1x, block1y, block2x, block2y, block3x, block3y, block4x, block4y;
-input [31:0] score, blockType;
+input [31:0] score, blockType, screenMode;
 output [18:0] addr_imgmem;
 output reg oBLANK_n;
 output reg oHS;
@@ -32,7 +33,6 @@ output [7:0] r_data;
 ///////// ////                     
 reg [18:0] ADDR;
 reg [23:0] bgr_data;
-//reg [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y;
 wire VGA_CLK_n;
 wire cBLANK_n,cHS,cVS,rst;
 ////
@@ -43,17 +43,6 @@ video_sync_generator LTM_ins (.vga_clk(iVGA_CLK),
                               .HS(cHS),
                               .VS(cVS));
 ////
-//always@(posedge iVGA_CLK)
-//begin
-//	b1x <= block1x;
-//   b1y <= block1y;
-//   b2x <= block2x;
-//   b2y <= block2y;
-//   b3x <= block3x;
-//   b3y <= block3y;
-//   b4x <= block4x;
-//   b4y <= block4y;
-//end
 ////Addresss generator
 always@(posedge iVGA_CLK,negedge iRST_n)
 begin
@@ -65,34 +54,72 @@ begin
      ADDR<=ADDR+19'd1;
 end
 //////////////////////////
+
+wire[2:0] mode;
+assign mode = screenMode[31:29];
+
+wire[18:0] addr0, addr1, addr2, addr3;
+
+assign addr_imgmem = mode == 3'd0 ? addr0 : 19'dz;
+assign addr_imgmem = mode == 3'd1 ? addr1 : 19'dz;
+assign addr_imgmem = mode == 3'd2 ? addr2 : 19'dz;
+assign addr_imgmem = mode == 3'd3 ? addr3 : 19'dz;
+
+
+wire [23:0] rgb_display;
+wire [23:0] rgb_display0, rgb_display1, rgb_display2, rgb_display3;
+assign rgb_display = mode == 3'd0 ? rgb_display0 : 24'dz;
+assign rgb_display = mode == 3'd1 ? rgb_display1 : 24'dz;
+assign rgb_display = mode == 3'd2 ? rgb_display2 : 24'dz;
+assign rgb_display = mode == 3'd3 ? rgb_display3 : 24'dz;
+
+
 //////INDEX addr.
-wire [7:0] index;
-wire [23:0] bgr_data_raw;
 assign VGA_CLK_n = ~iVGA_CLK;
-assign addr_imgmem = ADDR;
+wire [7:0] index;
+wire [23:0] bgr;
+//assign addr_imgmem = ADDR;
 assign index = q_imgmem;
 //////Color table output
 imgrom	img_index_inst (
 	.address ( index ),
 	.clock ( iVGA_CLK ),
-	.q ( bgr_data_raw)
+	.q (bgr)
 	);	
-//////
-wire [23:0] rgb_display;
-vga_processor myProcessor(.address(ADDR),
-								  .colorIn(bgr_data_raw),
-								  .b1x(block1x),
-								  .b1y(block1y),
-								  .b2x(block2x),
-								  .b2y(block2y),
-								  .b3x(block3x),
-								  .b3y(block3y),
-								  .b4x(block4x),
-								  .b4y(block4y),
-								  .score(score),
-								  .blockType(blockType),
-								  .colorOut(rgb_display)
-								  );
+	
+////// SCREEN MODE 0 LOGIC
+
+assign addr0 = ADDR;
+assign rgb_display0 = bgr;
+	
+////// SCREEN MODE 1 LOGIC
+vga_processor myGameProcessor(.curAddress(ADDR),
+										.addrToRead(addr1),
+										.colorIn(bgr),
+										.colorOut(rgb_display1),
+										.b1x(block1x),
+										.b1y(block1y),
+										.b2x(block2x),
+										.b2y(block2y),
+										.b3x(block3x),
+										.b3y(block3y),
+										.b4x(block4x),
+										.b4y(block4y),
+										.score(score),
+										.blockType(blockType)
+										);
+																
+										
+////// SCREEN MODE 2 LOGIC
+
+assign addr2 = ADDR;
+assign rgb_display2 = bgr;
+
+////// SCREEN MODE 3 LOGIC
+
+assign addr3 = ADDR;
+assign rgb_display3 = bgr;
+
 //////latch valid data at falling edge;
 always@(posedge VGA_CLK_n) bgr_data <= rgb_display;
 assign b_data = bgr_data[23:16];
