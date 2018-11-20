@@ -1,5 +1,8 @@
-module vga_processor(curAddress,
+module vga_processor(seconds,
+							curAddress,
 							addrToRead,
+							indexIn,
+							indexOut,
 							colorIn,
 							colorOut,
 							b1x,
@@ -13,14 +16,18 @@ module vga_processor(curAddress,
 							score,
 							blockType
 							);
+	input [15:0] seconds;
 	input [18:0] curAddress;
+	input [7:0] indexIn;
 	input [23:0] colorIn;
 	input [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y;
 	input [31:0] score, blockType;
 	
 	output [18:0] addrToRead;
+	output [7:0] indexOut;
 	output [23:0] colorOut;
 	reg [18:0] addrToRead;
+	reg [7:0] indexOut;
 	reg [23:0] colorOut;
 	
 	wire [9:0] curX, curY;
@@ -39,6 +46,8 @@ module vga_processor(curAddress,
 	assign nine = 19'd311925;
 	reg [13:0] thousands, hundreds, tens, ones;
 	reg [18:0] offsetL0, offsetL1, offsetL2, offsetL3;
+	reg [13:0] min1, min0, sec1, sec0;
+	reg [18:0] offsetT0, offsetT1, offsetT2, offsetT3;
 	
 	initial
 	begin
@@ -50,6 +59,14 @@ module vga_processor(curAddress,
 		offsetL1 <= 19'd0;
 		offsetL2 <= 19'd0;
 		offsetL3 <= 19'd0;
+		min1 <= 14'd0;
+		min0 <= 14'd0;
+		sec1 <= 14'd0;
+		sec0 <= 14'd0;
+		offsetT0 <= 19'd0;
+		offsetT1 <= 19'd0;
+		offsetT2 <= 19'd0;
+		offsetT3 <= 19'd0;
 	end
 	
 	always @(score)
@@ -60,12 +77,25 @@ module vga_processor(curAddress,
 		ones <= score[13:0] % 14'd10;
 	end
 	
+	always @(seconds)
+	begin
+		sec0 <= (seconds % 16'd60) % 16'd10;
+		sec1 <= (seconds % 16'd60) / 16'd10;
+		min0 <= (seconds / 16'd60) % 16'd10;
+		min1 <= (seconds / 16'd60) / 16'd10;
+	end
+	
 	always @(curY or curX)
 	begin
-		offsetL3 = curX - 10'd415 + ((curY - 10'd300)*10'd640);
-		offsetL2 = curX - 10'd436 + ((curY - 10'd300)*10'd640);
-		offsetL1 = curX - 10'd457 + ((curY - 10'd300)*10'd640);
-		offsetL0 = curX - 10'd478 + ((curY - 10'd300)*10'd640);
+		offsetL3 = curX - 10'd415 + ((curY - 10'd300)*10'd21);
+		offsetL2 = curX - 10'd436 + ((curY - 10'd300)*10'd21);
+		offsetL1 = curX - 10'd457 + ((curY - 10'd300)*10'd21);
+		offsetL0 = curX - 10'd478 + ((curY - 10'd300)*10'd21);
+		
+		offsetT3 = curX - 10'd410 + ((curY - 10'd415)*10'd21);
+		offsetT2 = curX - 10'd431 + ((curY - 10'd415)*10'd21);
+		offsetT1 = curX - 10'd463 + ((curY - 10'd415)*10'd21);
+		offsetT0 = curX - 10'd484 + ((curY - 10'd415)*10'd21);
 	end
 	
 	always
@@ -75,55 +105,55 @@ module vga_processor(curAddress,
 		begin
 			if(curX >= 10'd415 && curX < 10'd436)
 			begin
-				addrToRead <= thousands == 14'd0 ? zero + offsetL3: 19'dz;
-				addrToRead <= thousands == 14'd1 ? one + offsetL3: 19'dz;
-				addrToRead <= thousands == 14'd2 ? two + offsetL3: 19'dz;
-				addrToRead <= thousands == 14'd3 ? three + offsetL3: 19'dz;
-				addrToRead <= thousands == 14'd4 ? four + offsetL3: 19'dz;
-				addrToRead <= thousands == 14'd5 ? five + offsetL3: 19'dz;
-				addrToRead <= thousands == 14'd6 ? six + offsetL3: 19'dz;
-				addrToRead <= thousands == 14'd7 ? seven + offsetL3: 19'dz;
-				addrToRead <= thousands == 14'd8 ? eight + offsetL3: 19'dz;
-				addrToRead <= thousands == 14'd9 ? nine + offsetL3: 19'dz;
+				addrToRead <= thousands == 14'd0 ? zero + offsetL3 : 
+								  thousands == 14'd1 ? one + offsetL3:
+								  thousands == 14'd2 ? two + offsetL3:
+								  thousands == 14'd3 ? three + offsetL3:
+								  thousands == 14'd4 ? four + offsetL3:
+								  thousands == 14'd5 ? five + offsetL3:
+								  thousands == 14'd6 ? six + offsetL3:
+								  thousands == 14'd7 ? seven + offsetL3:
+								  thousands == 14'd8 ? eight + offsetL3:
+								  thousands == 14'd9 ? nine + offsetL3: curAddress;
 			end
 			else if(curX >= 10'd436 && curX < 10'd457)
 			begin
-				addrToRead <= hundreds == 14'd0 ? zero + offsetL2: 19'dz;
-				addrToRead <= hundreds == 14'd1 ? one + offsetL2: 19'dz;
-				addrToRead <= hundreds == 14'd2 ? two + offsetL2: 19'dz;
-				addrToRead <= hundreds == 14'd3 ? three + offsetL2: 19'dz;
-				addrToRead <= hundreds == 14'd4 ? four + offsetL2: 19'dz;
-				addrToRead <= hundreds == 14'd5 ? five + offsetL2: 19'dz;
-				addrToRead <= hundreds == 14'd6 ? six + offsetL2: 19'dz;
-				addrToRead <= hundreds == 14'd7 ? seven + offsetL2: 19'dz;
-				addrToRead <= hundreds == 14'd8 ? eight + offsetL2: 19'dz;
-				addrToRead <= hundreds == 14'd9 ? nine + offsetL2: 19'dz;
+				addrToRead <= hundreds == 14'd0 ? zero + offsetL2:
+								  hundreds == 14'd1 ? one + offsetL2:
+								  hundreds == 14'd2 ? two + offsetL2: 
+								  hundreds == 14'd3 ? three + offsetL2:
+								  hundreds == 14'd4 ? four + offsetL2: 
+								  hundreds == 14'd5 ? five + offsetL2: 
+								  hundreds == 14'd6 ? six + offsetL2: 
+								  hundreds == 14'd7 ? seven + offsetL2: 
+								  hundreds == 14'd8 ? eight + offsetL2: 
+								  hundreds == 14'd9 ? nine + offsetL2: curAddress;
 			end
 			else if(curX >= 10'd457 && curX < 10'd478)
 			begin
-				addrToRead <= tens == 14'd0 ? zero + offsetL1: 19'dz;
-				addrToRead <= tens == 14'd1 ? one + offsetL1: 19'dz;
-				addrToRead <= tens == 14'd2 ? two + offsetL1: 19'dz;
-				addrToRead <= tens == 14'd3 ? three + offsetL1: 19'dz;
-				addrToRead <= tens == 14'd4 ? four + offsetL1: 19'dz;
-				addrToRead <= tens == 14'd5 ? five + offsetL1: 19'dz;
-				addrToRead <= tens == 14'd6 ? six + offsetL1: 19'dz;
-				addrToRead <= tens == 14'd7 ? seven + offsetL1: 19'dz;
-				addrToRead <= tens == 14'd8 ? eight + offsetL1: 19'dz;
-				addrToRead <= tens == 14'd9 ? nine + offsetL1: 19'dz;
+				addrToRead <= tens == 14'd0 ? zero + offsetL1: 
+								  tens == 14'd1 ? one + offsetL1: 
+								  tens == 14'd2 ? two + offsetL1: 
+								  tens == 14'd3 ? three + offsetL1:
+								  tens == 14'd4 ? four + offsetL1: 
+								  tens == 14'd5 ? five + offsetL1: 
+								  tens == 14'd6 ? six + offsetL1: 
+								  tens == 14'd7 ? seven + offsetL1: 
+								  tens == 14'd8 ? eight + offsetL1: 
+								  tens == 14'd9 ? nine + offsetL1: curAddress;
 			end
 			else if(curX >= 10'd478 && curX < 10'd499)
 			begin
-				addrToRead <= ones == 14'd0 ? zero + offsetL0: 19'dz;
-				addrToRead <= ones == 14'd1 ? one + offsetL0: 19'dz;
-				addrToRead <= ones == 14'd2 ? two + offsetL0: 19'dz;
-				addrToRead <= ones == 14'd3 ? three + offsetL0: 19'dz;
-				addrToRead <= ones == 14'd4 ? four + offsetL0: 19'dz;
-				addrToRead <= ones == 14'd5 ? five + offsetL0: 19'dz;
-				addrToRead <= ones == 14'd6 ? six + offsetL0: 19'dz;
-				addrToRead <= ones == 14'd7 ? seven + offsetL0: 19'dz;
-				addrToRead <= ones == 14'd8 ? eight + offsetL0: 19'dz;
-				addrToRead <= ones == 14'd9 ? nine + offsetL0: 19'dz;
+				addrToRead <= ones == 14'd0 ? zero + offsetL0: 
+								  ones == 14'd1 ? one + offsetL0: 
+								  ones == 14'd2 ? two + offsetL0: 
+								  ones == 14'd3 ? three + offsetL0:
+								  ones == 14'd4 ? four + offsetL0:
+								  ones == 14'd5 ? five + offsetL0: 
+								  ones == 14'd6 ? six + offsetL0: 
+								  ones == 14'd7 ? seven + offsetL0: 
+								  ones == 14'd8 ? eight + offsetL0:
+								  ones == 14'd9 ? nine + offsetL0: curAddress;
 			end
 			else
 				addrToRead <= curAddress;
@@ -131,24 +161,81 @@ module vga_processor(curAddress,
 		// Time Area
 		else if (curY >= 10'd415 && curY < 10'd440)
 		begin
-			addrToRead <= curAddress;
+			if(curX >= 10'd410 && curX < 10'd431)
+			begin
+				addrToRead <= min1 == 14'd0 ? zero + offsetT3 : 
+								  min1 == 14'd1 ? one + offsetT3:
+								  min1 == 14'd2 ? two + offsetT3:
+								  min1 == 14'd3 ? three + offsetT3:
+								  min1 == 14'd4 ? four + offsetT3:
+								  min1 == 14'd5 ? five + offsetT3:
+								  min1 == 14'd6 ? six + offsetT3:
+								  min1 == 14'd7 ? seven + offsetT3:
+								  min1 == 14'd8 ? eight + offsetT3:
+								  min1 == 14'd9 ? nine + offsetT3: curAddress;
+			end
+			else if(curX >= 10'd431 && curX < 10'd452)
+			begin
+				addrToRead <= min0 == 14'd0 ? zero + offsetT2:
+								  min0 == 14'd1 ? one + offsetT2:
+								  min0 == 14'd2 ? two + offsetT2: 
+								  min0 == 14'd3 ? three + offsetT2:
+								  min0 == 14'd4 ? four + offsetT2: 
+								  min0 == 14'd5 ? five + offsetT2: 
+								  min0 == 14'd6 ? six + offsetT2: 
+								  min0 == 14'd7 ? seven + offsetT2: 
+								  min0 == 14'd8 ? eight + offsetT2: 
+								  min0 == 14'd9 ? nine + offsetT2: curAddress;
+			end
+			else if(curX >= 10'd463 && curX < 10'd484)
+			begin
+				addrToRead <= sec1 == 14'd0 ? zero + offsetT1: 
+								  sec1 == 14'd1 ? one + offsetT1: 
+								  sec1 == 14'd2 ? two + offsetT1: 
+								  sec1 == 14'd3 ? three + offsetT1:
+								  sec1 == 14'd4 ? four + offsetT1: 
+								  sec1 == 14'd5 ? five + offsetT1: 
+								  sec1 == 14'd6 ? six + offsetT1: 
+								  sec1 == 14'd7 ? seven + offsetT1: 
+								  sec1 == 14'd8 ? eight + offsetT1: 
+								  sec1 == 14'd9 ? nine + offsetT1: curAddress;
+			end
+			else if(curX >= 10'd484 && curX < 10'd505)
+			begin
+				addrToRead <= sec0 == 14'd0 ? zero + offsetT0: 
+								  sec0 == 14'd1 ? one + offsetT0: 
+								  sec0 == 14'd2 ? two + offsetT0: 
+								  sec0 == 14'd3 ? three + offsetT0:
+								  sec0 == 14'd4 ? four + offsetT0:
+								  sec0 == 14'd5 ? five + offsetT0: 
+								  sec0 == 14'd6 ? six + offsetT0: 
+								  sec0 == 14'd7 ? seven + offsetT0: 
+								  sec0 == 14'd8 ? eight + offsetT0:
+								  sec0 == 14'd9 ? nine + offsetT0: curAddress;
+			end
+			else
+				addrToRead <= curAddress;
 		end
 		else
 			addrToRead <= curAddress;
 	end
 	
+	
 	always
 	begin
 		if (curX >= b1x[9:0] && curX < b1x[9:0] + 10'd20 && curY >= b1y[9:0] && curY < b1y[9:0] + 10'd20)
-			colorOut <= blockType[23:0];
+			indexOut <= blockType[7:0];
 		else if (curX >= b2x[9:0] && curX < b2x[9:0] + 10'd20 && curY >= b2y[9:0] && curY < b2y[9:0] + 10'd20)
-			colorOut <= blockType[23:0];
+			indexOut <= blockType[7:0];
 		else if (curX >= b3x[9:0] && curX < b3x[9:0] + 10'd20 && curY >= b3y[9:0] && curY < b3y[9:0] + 10'd20)
-			colorOut <= blockType[23:0];
+			indexOut <= blockType[7:0];
 		else if (curX >= b4x[9:0] && curX < b4x[9:0] + 10'd20 && curY >= b4y[9:0] && curY < b4y[9:0] + 10'd20)
-			colorOut <= blockType[23:0];
+			indexOut <= blockType[7:0];
 		else
-			colorOut <= colorIn;
+			indexOut <= indexIn;
 	end
+	
+	always
+		colorOut <= colorIn;
 
 endmodule

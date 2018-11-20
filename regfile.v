@@ -151,7 +151,7 @@ module regfile (
 	assign data_readRegA = aBypass ? data_writeReg : outDataA;
 	assign data_readRegB = bBypass ? data_writeReg : outDataB;
 	
-	assign screenMode = r19;
+	assign screenMode = r15;
 	assign blockType = r20;
 	assign score = r21;
 	assign block1x = r22;

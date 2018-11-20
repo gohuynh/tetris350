@@ -81,7 +81,11 @@ module processor(
 	 io_left,
 	 io_right,
 	 io_down,
-	 io_rotate_cw
+	 io_rotate_cw,
+	 
+	 // In Game Timing
+	 counter,
+	 seconds
 	
 );
     // Control signals
@@ -111,6 +115,10 @@ module processor(
 	 
 	 // Controller Inputs
 	 input io_left, io_right, io_down, io_rotate_cw;
+	 
+	 // In Game Timing
+	 input [25:0] counter;
+	 input [15:0] seconds;
 
     /* YOUR CODE STARTS HERE */
 	 
@@ -166,8 +174,8 @@ module processor(
 					dOpcode, rawRd, rawRs, rawRt, dShamt, dAluOp, dImm, dT, fdSeqNextPC, instOut);
 	 
 	 // Decode
-	 wire dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dIsw, dIlw, dRi, dSetx, dBex;
-	 opDecoder dOpDecoder(dOpcode, dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dIsw, dIlw, dRi, dSetx, dBex);
+	 wire dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dIsw, dIlw, dRi, dRtick, dRsec, dSetx, dBex;
+	 opDecoder dOpDecoder(dOpcode, dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dIsw, dIlw, dRi, dRtick, dRsec, dSetx, dBex);
 	 
 	 // Reassign register read sources and destination if needed
 	 or rdOr(readRd, dBne, dJr, dBlt);
@@ -194,7 +202,7 @@ module processor(
 //	 assign adRt = dSw ? rawRd : (rsToRd ? rawRs : rawRt);
 	 
 	 // Filter out unintended source registers
-	 or orNoRs(noRs, dJ, dJal, dSetx, dRi);
+	 or orNoRs(noRs, dJ, dJal, dSetx, dRi, dRtick, dRsec);
 	 or orNeedRt(yesRt, dR, rsToRd, dSw, dIsw);
 	 assign rs = noRs ? 5'd0 : adRs;
 	 assign rt = yesRt ? adRt : 5'd0;
@@ -219,8 +227,8 @@ module processor(
 					dxSeqNextPC, operandA, operandB, xOpcode, xRdOriginal, xShamt, xAluOp, xImm, xT, xRs, xRt);
 	 
 	 // Decode
-	 wire xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xIsw, xIlw, xRi, xSetx, xBex;
-	 opDecoder xOpDecoder(xOpcode, xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xIsw, xIlw, xRi, xSetx, xBex);
+	 wire xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xIsw, xIlw, xRi, xRtick, xRsec, xSetx, xBex;
+	 opDecoder xOpDecoder(xOpcode, xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xIsw, xIlw, xRi, xRtick, xRsec, xSetx, xBex);
 	 
 	 // Sign extend for imm
 	 wire[31:0] extendedImm;
@@ -360,14 +368,16 @@ module processor(
 	 wire xWReg;
 	 wire xUseAlu;
 	 
-	 and andXUseAlu(xUseAlu, ~xSetx, ~xJal, ~xRi);	 
+	 and andXUseAlu(xUseAlu, ~xSetx, ~xJal, ~xRi, ~xRtick, ~xRsec);	 
 	 signExtenderJI sxT(xT, extendedT);
 	 assign xO = xSetx ? extendedT : 32'dz;
 	 assign xO = xJal ? dxSeqNextPC : 32'dz;
 	 assign xO = xRi ? xInputRead : 32'dz;
+	 assign xO = xRtick ? counter : 32'dz;
+	 assign xO = xRsec ? seconds : 32'dz;
 	 assign xO = xUseAlu ? aluOut : 32'dz;
 	 
-	 or orXWReg(xWReg, xR, xAddi, xLw, xJal, xRi, xSetx, xIlw);
+	 or orXWReg(xWReg, xR, xAddi, xLw, xJal, xRi, xRtick, xRsec, xSetx, xIlw);
 	 
 	 
 	 /*

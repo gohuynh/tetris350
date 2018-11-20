@@ -16,14 +16,16 @@ module tetris(clock,
 	 IO_right_LED,
 	 IO_down_LED,
 	 IO_rotate_cw_LED,
-	 DEBUG_gamemode1,
-	 DEBUG_gamemode0
+	 DEBUG_gamemode,
+	 DEBUG_mode
+//	 outy
 //	 dataToReg
 	 );
 	 
 //	 output [31:0] dataToReg;
-	input DEBUG_gamemode1;
-	input DEBUG_gamemode0;
+//	output [31:0] outy;
+	input [15:0] DEBUG_gamemode;
+	input DEBUG_mode;
 	 
 	 input IO_left, IO_right, IO_down, IO_rotate_cw;
     input clock, reset;
@@ -41,6 +43,49 @@ module tetris(clock,
 	 assign IO_right_LED = right;
 	 assign IO_down_LED = down;
 	 assign IO_rotate_cw_LED = rotate_cw;
+	 
+	 
+	 
+	 
+	 wire [31:0] DEBUG_screenMode, tempScreenMode, screenMode;
+	 assign DEBUG_screenMode[31:16] = DEBUG_gamemode;
+	 assign DEBUG_screenMode[15:0] = 16'd0;
+	 assign tempScreenMode = DEBUG_mode ? DEBUG_screenMode : screenMode;
+	 
+	 /** In Game Timer **/
+	 reg changeReset;
+	 reg[25:0] counter;
+	 reg[15:0] seconds;
+	 initial
+	 begin
+		counter <= 26'd0;
+		seconds <= 16'd0;
+		changeReset <= 1'b0;
+	 end
+	 
+	 always @(tempScreenMode[31:29])
+	 begin
+		if (tempScreenMode[31:29] == 3'b001)
+			changeReset <= 1'b0;
+		else
+			changeReset <= 1'b1;
+	 end
+		
+	 always @(posedge clock or posedge reset or posedge changeReset)
+	 begin
+		if (reset || changeReset)
+		begin
+			counter <= 26'd0;
+			seconds <= 26'd0;
+		end
+		else if (counter > 26'd50000000)
+		begin
+			counter <= 26'd0;
+			seconds <= seconds + 16'd1;
+		end
+		else
+			counter <= counter + 26'd1;
+	 end
 	 
 	 
     /** IMEM **/
@@ -91,7 +136,7 @@ module tetris(clock,
     wire [31:0] data_writeReg;
     wire [31:0] data_readRegA, data_readRegB;
 	 wire [31:0] block1x, block1y, block2x, block2y, block3x, block3y, block4x, block4y;
-	 wire [31:0] score, blockType, screenMode;
+	 wire [31:0] score, blockType;
     regfile my_regfile(
         .clock(clock),
         .ctrl_writeEnable(ctrl_writeEnable),
@@ -115,17 +160,29 @@ module tetris(clock,
 		  .screenMode(screenMode)
     );
 	 
-	 wire [31:0] DEBUG_screenMode;
-	 assign DEBUG_screenMode[31] = 1'b0;
-	 assign DEBUG_screenMode[30] = DEBUG_gamemode1;
-	 assign DEBUG_screenMode[29] = DEBUG_gamemode0;
-	 assign DEBUG_screenMode[28:0] = 29'd0;
+	 reg [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y, vga_score, vga_type, vga_mode;
+	 
+	 always @(posedge clock)
+	 begin
+		b1x <= block1x;
+		b1y <= block1y;
+		b2x <= block2x;
+		b2y <= block2y;
+		b3x <= block3x;
+		b3y <= block3y;
+		b4x <= block4x;
+		b4y <= block4y;
+		vga_score <= score;
+		vga_type <= blockType;
+		vga_mode <= screenMode;
+	 end
 	 
 	 // VGA
 	 wire DLY_RST, VGA_CTRL_CLK, AUD_CTRL_CLK;
+	 
 	 Reset_Delay			r0	(.iCLK(clock),.oRESET(DLY_RST)	);
-//	 VGA_Audio_PLL 		p1	(.areset(~DLY_RST),.inclk0(clock),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)	);
-	 testpll					p1 (.areset(~DLY_RST), .inclk0(clock), .c0(VGA_CLK));
+	 VGA_Audio_PLL 		p1	(.areset(~DLY_RST),.inclk0(clock),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)	);
+//	 testpll					p1 (.areset(~DLY_RST), .inclk0(clock), .c0(VGA_CLK));
 	 vga_controller vga_ins	(.iRST_n(DLY_RST),
 									 .iVGA_CLK(VGA_CLK),
 									 .oBLANK_n(VGA_BLANK),
@@ -136,17 +193,18 @@ module tetris(clock,
 									 .r_data(VGA_R),
 									 .addr_imgmem(addressB_imgmem),
 									 .q_imgmem(qB_imgmem),
-									 .block1x(block1x),
-									 .block1y(block1y),
-									 .block2x(block2x),
-									 .block2y(block2y),
-									 .block3x(block3x),
-									 .block3y(block3y),
-									 .block4x(block4x),
-									 .block4y(block4y),
-									 .score(score),
-									 .blockType(blockType),
-									 .screenMode(DEBUG_screenMode)
+									 .block1x(b1x),
+									 .block1y(b1y),
+									 .block2x(b2x),
+									 .block2y(b2y),
+									 .block3x(b3x),
+									 .block3y(b3y),
+									 .block4x(b4x),
+									 .block4y(b4y),
+									 .score(vga_score),
+									 .blockType(vga_type),
+									 .screenMode(tempScreenMode),
+									 .sysTime(seconds)
 									 );
 
     /** PROCESSOR **/
@@ -184,10 +242,15 @@ module tetris(clock,
 		  left,
 		  right,
 		  down,
-		  rotate_cw
+		  rotate_cw,
+		  
+		  // In Game Timing
+		  counter,
+		  seconds
 		  
     );
 	 
 //	 assign dataToReg = data_writeReg;
+//	assign outy = block1y;
 
 endmodule
