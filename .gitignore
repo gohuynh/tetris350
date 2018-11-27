@@ -5,3 +5,10 @@
 !*.mif
 !*.pdf
 !*.png
+!*.qpf
+!*.qsf
+!*.qip
+!MIPS/
+!ImageStuff/
+!*.s
+!*.txt

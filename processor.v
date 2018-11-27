@@ -61,6 +61,12 @@ module processor(
     data,                           // O: The data to write to dmem
     wren,                           // O: Write enable for dmem
     q_dmem,                         // I: The data from dmem
+	 
+	 // Imem
+    address_imgmem,                   // O: The address of the data to get or put from/to imgmem
+    data_imgmem,                      // O: The data to write to imgmem
+    wren_imgmem,                      // O: Write enable for imgmem
+    q_imgmem,                         // I: The data from imgmem
 
     // Regfile
     ctrl_writeEnable,               // O: Write enable for regfile
@@ -69,7 +75,17 @@ module processor(
     ctrl_readRegB,                  // O: Register to read from port B of regfile
     data_writeReg,                  // O: Data to write to for regfile
     data_readRegA,                  // I: Data from port A of regfile
-    data_readRegB                   // I: Data from port B of regfile
+    data_readRegB,                   // I: Data from port B of regfile
+	 
+	 // Controller Inputs
+	 io_left,
+	 io_right,
+	 io_down,
+	 io_rotate_cw,
+	 
+	 // In Game Timing
+	 counter,
+	 seconds
 	
 );
     // Control signals
@@ -84,12 +100,25 @@ module processor(
     output [31:0] data;
     output wren;
     input [31:0] q_dmem;
+	 
+	 // IMGmem
+    output [18:0] address_imgmem;
+    output [7:0] data_imgmem;
+    output wren_imgmem;
+    input [7:0] q_imgmem;
 
     // Regfile
     output ctrl_writeEnable;
     output [4:0] ctrl_writeReg, ctrl_readRegA, ctrl_readRegB;
     output [31:0] data_writeReg;
     input [31:0] data_readRegA, data_readRegB;
+	 
+	 // Controller Inputs
+	 input io_left, io_right, io_down, io_rotate_cw;
+	 
+	 // In Game Timing
+	 input [25:0] counter;
+	 input [15:0] seconds;
 
     /* YOUR CODE STARTS HERE */
 	 
@@ -145,25 +174,26 @@ module processor(
 					dOpcode, rawRd, rawRs, rawRt, dShamt, dAluOp, dImm, dT, fdSeqNextPC, instOut);
 	 
 	 // Decode
-	 wire dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dSetx, dBex;
-	 opDecoder dOpDecoder(dOpcode, dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dSetx, dBex);
+	 wire dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dIsw, dIlw, dRi, dRtick, dRsec, dSetx, dBex;
+	 opDecoder dOpDecoder(dOpcode, dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dIsw, dIlw, dRi, dRtick, dRsec, dSetx, dBex);
 	 
 	 // Reassign register read sources and destination if needed
 	 or rdOr(readRd, dBne, dJr, dBlt);
 	 or rtOr(rsToRd, dBne, dBlt);
 	 
-	 wire useRawRd, useRawRs, useRawRt;
+	 wire useRawRd, useRawRs, useRawRt, dswisw;
 	 
 	 and andUserRawRd(useRawRd, ~dSetx, ~dJal);
 	 and andUserRawRs(useRawRs, ~readRd, ~dBex);
-	 and andUserRawRt(useRawRt, ~dSw, ~rsToRd);
+	 and andUserRawRt(useRawRt, ~dSw, ~rsToRd, ~dIsw);
+	 or orDswisw(dswisw, dSw, dIsw);
 	 assign dRd = dSetx ? 5'd30 : 5'dz;
 	 assign dRd = dJal ? 5'd31 : 5'dz;
 	 assign dRd = useRawRd ? rawRd : 5'dz;
 	 assign adRs = readRd ? rawRd : 5'dz;
 	 assign adRs = dBex ? 5'd30 : 5'dz;
 	 assign adRs = useRawRs ? rawRs : 5'dz;
-	 assign adRt = dSw ? rawRd : 5'dz;
+	 assign adRt = dswisw ? rawRd : 5'dz;
 	 assign adRt = rsToRd ? rawRs : 5'dz;
 	 assign adRt = useRawRt ? rawRt : 5'dz;
 	 
@@ -172,8 +202,8 @@ module processor(
 //	 assign adRt = dSw ? rawRd : (rsToRd ? rawRs : rawRt);
 	 
 	 // Filter out unintended source registers
-	 or orNoRs(noRs, dJ, dJal, dSetx);
-	 or orNeedRt(yesRt, dR, rsToRd, dSw);
+	 or orNoRs(noRs, dJ, dJal, dSetx, dRi, dRtick, dRsec);
+	 or orNeedRt(yesRt, dR, rsToRd, dSw, dIsw);
 	 assign rs = noRs ? 5'd0 : adRs;
 	 assign rt = yesRt ? adRt : 5'd0;
 	 
@@ -197,8 +227,8 @@ module processor(
 					dxSeqNextPC, operandA, operandB, xOpcode, xRdOriginal, xShamt, xAluOp, xImm, xT, xRs, xRt);
 	 
 	 // Decode
-	 wire xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xSetx, xBex;
-	 opDecoder xOpDecoder(xOpcode, xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xSetx, xBex);
+	 wire xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xIsw, xIlw, xRi, xRtick, xRsec, xSetx, xBex;
+	 opDecoder xOpDecoder(xOpcode, xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xIsw, xIlw, xRi, xRtick, xRsec, xSetx, xBex);
 	 
 	 // Sign extend for imm
 	 wire[31:0] extendedImm;
@@ -228,7 +258,7 @@ module processor(
 	 // Set up input B
 	 wire useImm;
 	 
-	 or orUseImm(useImm, xAddi, xSw, xLw);
+	 or orUseImm(useImm, xAddi, xSw, xLw, xIsw, xIlw);
 	 
 //	 assign xD = mBypassBBool ? mBypass : (wBypassBBool ? wBypass : operandB);
 	 and andNoBBypass(noBBypass, ~mBypassBBool, ~wBypassBBool);
@@ -256,7 +286,7 @@ module processor(
 	 Mult/Div stuff
 	 ======================
 	 */
-	 wire xMult, xDiv, xMultOp, xDivOp, xMDOVF, xMDReady, xMulDiv, xMDException, mdStall;
+	 wire xMult, xDiv, xMultOp, xDivOp, xMDOVF, xMDReady, xMulDiv, xMDException, mdStall, mdCalculating;
 	 wire[31:0] xMDOut;
 	 
 	 assign xMultOp = aluOp === 5'b00110 ? 1'b1 : 1'b0;
@@ -269,6 +299,18 @@ module processor(
 	 or orXMulDiv(xMulDiv, xMult, xDiv, mdCalculating);
 	 
 	 multdiv xMultDiv(aluInA, aluInB, xMult, xDiv, clock, xMDOut, xMDOVF, xMDReady);
+	 
+	 /*
+	 ======================
+	 Input stuff
+	 ======================
+	 */
+	 wire[31:0] xInputRead;
+	 assign xInputRead[0] = io_left;
+	 assign xInputRead[1] = io_right;
+	 assign xInputRead[2] = io_down;
+	 assign xInputRead[3] = io_rotate_cw;
+	 assign xInputRead[31:4] = 28'd0;
 	 
 	 /*
 	 ======================
@@ -324,11 +366,24 @@ module processor(
 	 
 	 wire[31:0] xO, extendedT;
 	 wire xWReg;
+	 wire xUseAlu;
 	 
+	 and andXUseAlu(xUseAlu, ~xSetx, ~xJal, ~xRi, ~xRtick, ~xRsec);	 
 	 signExtenderJI sxT(xT, extendedT);
-	 assign xO = xSetx ? extendedT : (xJal ? dxSeqNextPC : aluOut);
+	 assign xO = xSetx ? extendedT : 32'dz;
+	 assign xO = xJal ? dxSeqNextPC : 32'dz;
+	 assign xO = xRi ? xInputRead : 32'dz;
+	 assign xO = xRtick ? counter : 32'dz;
+	 assign xO = xRsec ? seconds : 32'dz;
+	 assign xO = xUseAlu ? aluOut : 32'dz;
 	 
-	 or orXWReg(xWReg, xR, xAddi, xLw, xJal, xSetx);
+	 or orXWReg(xWReg, xR, xAddi, xLw, xJal, xRi, xRtick, xRsec, xSetx, xIlw);
+	 
+	 wire[4:0] x2mRd;
+	 wire xSwIns;
+	 
+	 or orXSWIns(xSwIns, xSw, xIsw);
+	 assign x2mRd = xSwIns ? 5'd0 : xRd;
 	 
 	 
 	 /*
@@ -336,17 +391,29 @@ module processor(
 	 M logic
 	 ----------------------------------------------------------------------------------------------
 	 */
-	 wire[31:0] mO, dmemData, mD;
+	 wire[31:0] mO, dmemData, imemData, mD;
 	 wire[4:0] mRd, mRs;
-	 wire mWReg, mSw, mLw, xmStall, xmReset;
+	 wire mWReg, mSw, mIsw, mLw, mIlw, xmStall, xmReset;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
-	 xmLatch xm(clock, xO, xD, xSw, xWReg, xLw, xRd, xRs, ~xmStall, xmReset, 
-					mO, mD, mSw, mWReg, mLw, mRd, mRs);
+	 xmLatch xm(clock, xO, xD, xSw, xIsw, xWReg, xLw, xIlw, x2mRd, xRs, ~xmStall, xmReset, 
+					mO, mD, mSw, mIsw, mWReg, mLw, mIlw, mRd, mRs);
 	 
 	 assign address_dmem = mO[11:0];
+	 assign address_imgmem = mO[18:0];
 	 assign wren = mSw;
+	 assign wren_imgmem = mIsw;
 	 assign data = dmemData;
+	 assign data_imgmem = imemData[7:0];
+	 
+	 wire[31:0] mRamOut;
+	 wire[31:0] mQ_imgmemExt;
+	 assign mQ_imgmemExt[7:0] = q_imgmem;
+	 assign mQ_imgmemExt[31:8] = 16'd0;
+	 assign mRamOut = mIlw ? mQ_imgmemExt : q_dmem;
+	 
+	 wire mLoadInst;
+	 or orMLoadInst(mLoadInst, mLw, mIlw);
 	 
 	 /*
 	 ----------------------------------------------------------------------------------------------
@@ -357,7 +424,7 @@ module processor(
 	 wire[4:0] wRd;
 	 wire wWReg, wLw;
 	 
-	 mwLatch mw(clock, mO, q_dmem, mWReg, mLw, mRd, 1'b1, reset,
+	 mwLatch mw(clock, mO, mRamOut, mWReg, mLoadInst, mRd, 1'b1, reset,
 				   wO, wD, wWReg, wLw, wRd);
 					
 	 wire[31:0] wRegData;
@@ -392,7 +459,7 @@ module processor(
 	 regEqual regEqualXMRT(xRt, mRd, xmRDRTMatch);
 	 
 	 and andMBypassA(mBypassABool, xmRDRSMatch, mWReg, ~xmRDZero);
-	 and andMBypassB(mBypassBBool, xmRDRTMatch, mWReg, ~xmRDZero);
+	 and andMBypassB(mBypassBBool, xmRDRTMatch, mWReg, ~xmRDZero, );
 	 
 	 assign mBypass = mO;
 	 
@@ -412,13 +479,15 @@ module processor(
 	 Bypasses for M
 	 ======================
 	 */
-	 wire wmBypass, wmRDMatch, wmRDZero;
+	 wire wmBypass, wmRDMatch, wmRDZero, wmStore;
 	 
 	 regEqual regEqualZero(wRd, 5'd0, wmRDZero);
 	 regEqual regEqualWMRD(wRd, mRd, wmRDMatch);
-	 and andWMBypass(wmBypass, wmRDMatch, mSw, ~wmRDZero);
+	 or orWMStore(wmStore, mSw, mIsw);
+	 and andWMBypass(wmBypass, wmRDMatch, wmStore, ~wmRDZero);
 	 
 	 assign dmemData = wmBypass ? wRegData : mD;
+	 assign imemData = wmBypass ? wRegData : mD;
 	 
 	 /*
 	 ----------------------------------------------------------------------------------------------
@@ -440,14 +509,17 @@ module processor(
 	 Stalling for Loads
 	 ======================
 	 */
-	 wire dxRsMatch, dxRtMatch, dxRsNotStore, dxRdMatch, dxRDZero, stall, lwStall, mulDivStall;
+	 wire dxRsMatch, dxRtMatch, dxRsNotStore, dxRdMatch, dxRDZero, lwStall, nonZeroLW, stallLoad, stallStore;
 	 
 	 regEqual regEqualDXZero(xRd, 5'd0, dxRDZero);
 	 regEqual regEqualDXRS(xRd, adRs, dxRsMatch);
 	 regEqual regEqualDXRT(xRd, adRt, dxRtMatch);
 	 
-	 and andNonZeroLW(nonZeroLW , xLw, ~dxRDZero);
-	 and andDXRSNotStore(dxRsNotStore, dxRtMatch, ~dSw);
+	 or orStallLoad(stallLoad, xLw, xIlw);
+	 or orStallStore(stallStore, dSw, dIsw);
+	 
+	 and andNonZeroLW(nonZeroLW , stallLoad, ~dxRDZero);
+	 and andDXRSNotStore(dxRsNotStore, dxRtMatch, ~stallStore);
 	 or orDXRDMatch(dxRdMatch, dxRsMatch, dxRsNotStore);
 	 and andLwStall(lwStall, dxRdMatch, nonZeroLW);
 	 

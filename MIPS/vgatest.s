@@ -1,0 +1,32 @@
+addi $20, $0, 255;
+sll $20, $20, 16;
+addi $22, $0, 20;
+addi $23, $0, 20;
+addi $24, $0, 40;
+addi $25, $0, 20;
+addi $26, $0, 40;
+addi $27, $0, 40;
+addi $28, $0, 60;
+addi $29, $0, 40;
+addi $1, $0, 2;
+loop:
+ri $15;
+bne $1, $15 1;
+jal moveRight;
+j loop;
+noop;
+noop;
+noop;
+noop;
+noop;
+noop;
+noop;
+noop;
+noop;
+noop;
+moveRight:
+addi $22, $22, 20;
+addi $24, $24, 20;
+addi $26, $26, 20;
+addi $28, $28, 20;
+jr $31;
