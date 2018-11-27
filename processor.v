@@ -379,6 +379,12 @@ module processor(
 	 
 	 or orXWReg(xWReg, xR, xAddi, xLw, xJal, xRi, xRtick, xRsec, xSetx, xIlw);
 	 
+	 wire[4:0] x2mRd;
+	 wire xSwIns;
+	 
+	 or orXSWIns(xSwIns, xSw, xIsw);
+	 assign x2mRd = xSwIns ? 5'd0 : xRd;
+	 
 	 
 	 /*
 	 ----------------------------------------------------------------------------------------------
@@ -390,7 +396,7 @@ module processor(
 	 wire mWReg, mSw, mIsw, mLw, mIlw, xmStall, xmReset;
 	 
 	 // Changes every cycle for now i.e. no stalling yet
-	 xmLatch xm(clock, xO, xD, xSw, xIsw, xWReg, xLw, xIlw, xRd, xRs, ~xmStall, xmReset, 
+	 xmLatch xm(clock, xO, xD, xSw, xIsw, xWReg, xLw, xIlw, x2mRd, xRs, ~xmStall, xmReset, 
 					mO, mD, mSw, mIsw, mWReg, mLw, mIlw, mRd, mRs);
 	 
 	 assign address_dmem = mO[11:0];
@@ -453,7 +459,7 @@ module processor(
 	 regEqual regEqualXMRT(xRt, mRd, xmRDRTMatch);
 	 
 	 and andMBypassA(mBypassABool, xmRDRSMatch, mWReg, ~xmRDZero);
-	 and andMBypassB(mBypassBBool, xmRDRTMatch, mWReg, ~xmRDZero);
+	 and andMBypassB(mBypassBBool, xmRDRTMatch, mWReg, ~xmRDZero, );
 	 
 	 assign mBypass = mO;
 	 
