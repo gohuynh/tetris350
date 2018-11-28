@@ -123,7 +123,8 @@ vga_mainmenu_processor main_menu(.curAddress(ADDR),
 											.indexOut(index0),
 											.colorIn(bgr),
 											.colorOut(rgb_display0),
-											.score(vga_score)
+											.score(vga_score),
+											.metadata(metadata)
 											);
 	
 ////// SCREEN MODE 1 LOGIC
