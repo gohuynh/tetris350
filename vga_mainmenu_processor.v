@@ -110,18 +110,18 @@ module vga_mainmenu_processor(curAddress,
 				else if (curX >= 10'd238 && curX < 10'd259)
 					addrToRead <= zero + (19'd525 * 19'd1) + (curX - 10'd238) + op1Offset;
 				// P
-				else if (curX >= 10'd259 && curX < 10'd380)
+				else if (curX >= 10'd259 && curX < 10'd280)
 					addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd259) + op1Offset;
 				else
 					addrToRead <= 19'd1923;					
 			end
 			
 			// Option Four
-			else if (curX >= 10'd360 && curX < 10'd507)
+			else if (curX >= 10'd360 && curX < 10'd486)
 			begin
 				// T
 				if (curX >= 10'd360 && curX < 10'd381)
-					addrToRead <= zero + (19'd525 * 19'd29) + (curX - 10'd360) + op1Offset;
+					addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd360) + op1Offset;
 				// O
 				else if (curX >= 10'd381 && curX < 10'd402)
 					addrToRead <= zero + (19'd525 * 19'd24) + (curX - 10'd381) + op1Offset;
@@ -168,7 +168,7 @@ module vga_mainmenu_processor(curAddress,
 //			else if (curX >= 10'd238 && curX < 10'd259)
 //				addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd238) + op2Offset;
 //			// S
-//			else if (curX >= 10'd259 && curX < 10'd380)
+//			else if (curX >= 10'd259 && curX < 10'd280)
 //				addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd259) + op2Offset;
 //			
 //			
@@ -218,7 +218,7 @@ module vga_mainmenu_processor(curAddress,
 //			else if (curX >= 10'd238 && curX < 10'd259)
 //				addrToRead <= zero + (19'd525 * 19'd2) + (curX - 10'd238) + op3Offset;
 //			// P
-//			else if (curX >= 10'd259 && curX < 10'd380)
+//			else if (curX >= 10'd259 && curX < 10'd280)
 //				addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd259) + op3Offset;
 //			else
 //				addrToRead <= 19'd1923;
