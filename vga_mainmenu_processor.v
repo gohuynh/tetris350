@@ -167,7 +167,7 @@ module vga_mainmenu_processor(curAddress,
 					addrToRead <= zero + (19'd525 * 19'd21) + (curX - 10'd196) + op2Offset;
 				// E
 				else if (curX >= 10'd217 && curX < 10'd238)
-					addrToRead <= zero + (19'd525 * 19'd14) + (curX - 10'd217) + op2Offset
+					addrToRead <= zero + (19'd525 * 19'd14) + (curX - 10'd217) + op2Offset;
 				// S
 				else if (curX >= 10'd238 && curX < 10'd259)
 					addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd238) + op2Offset;
