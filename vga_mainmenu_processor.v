@@ -217,26 +217,25 @@ module vga_mainmenu_processor(curAddress,
 	end
 	
 	always
-		indexOut <= indexIn;
-	
-	always
 		// Set up Border
 		if (curY < 10'd3 || curY > 10'd476 || curX < 10'd3 || curX > 10'd636)
-			colorOut <= 24'hffffff;
+			indexOut <= 8'd7;
 		// Set up selected option
 		// Left
 		else if (curX >= selX && curX < selX + 10'd3 && curY >= selY && curY < selY + 10'd31)
-			colorOut <= 24'hffffff;
+			indexOut <= 8'd7;
 		// Right
 		else if (curX >= selX + 10'd150 && curX < selX + 10'd153 && curY >= selY && curY < selY + 10'd31)
-			colorOut <= 24'hffffff;
+			indexOut <= 8'd7;
 		// Top
 		else if (curX >= selX && curX < selX + 10'd153 && curY >= selY && curY < selY + 10'd3)
-			colorOut <= 24'hffffff;
+			indexOut <= 8'd7;
 		// Bottom
 		else if (curX >= selX && curX < selX + 10'd153 && curY >= selY + 10'd28 && curY < selY + 10'd31)
-			colorOut <= 24'hffffff;
+			indexOut <= 8'd7;
 		else
-			colorOut <= colorIn;
+		indexOut <= indexIn;
+	always
+		colorOut <= colorIn;
 	
 endmodule
