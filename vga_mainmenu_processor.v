@@ -85,56 +85,67 @@ module vga_mainmenu_processor(curAddress,
 			addrToRead <= logo + logoOffset;
 		end
 		
-//		// Option One (Play 1P) and Option Four (Top 1P)
-//		else if (curY >= 10'd227 && curY < 10'd252)
-//		begin
-//			// P
-//			if (curX >= 10'd133 && curX < 10'd154)
-//				addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd133) + op1Offset;
-//			// L
-//			else if (curX >= 10'd154 && curX < 10'd175)
-//				addrToRead <= zero + (19'd525 * 19'd21) + (curX - 10'd154) + op1Offset;
-//			// A
-//			else if (curX >= 10'd175 && curX < 10'd196)
-//				addrToRead <= zero + (19'd525 * 19'd10) + (curX - 10'd175) + op1Offset;
-//			// Y
-//			else if (curX >= 10'd196 && curX < 10'd217)
-//				addrToRead <= zero + (19'd525 * 19'd34) + (curX - 10'd196) + op1Offset;
-//			// Space
-//			else if (curX >= 10'd217 && curX < 10'd238)
-//				addrToRead <= 19'd1923;
-//			// 1
-//			else if (curX >= 10'd238 && curX < 10'd259)
-//				addrToRead <= zero + (19'd525 * 19'd1) + (curX - 10'd238) + op1Offset;
-//			// P
-//			else if (curX >= 10'd259 && curX < 10'd380)
-//				addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd259) + op1Offset;
-//			
-//			
-//			// T
-//			else if (curX >= 10'd360 && curX < 10'd381)
-//				addrToRead <= zero + (19'd525 * 19'd29) + (curX - 10'd360) + op1Offset;
-//			// O
-//			else if (curX >= 10'd381 && curX < 10'd402)
-//				addrToRead <= zero + (19'd525 * 19'd24) + (curX - 10'd381) + op1Offset;
-//			// P
-//			else if (curX >= 10'd402 && curX < 10'd423)
-//				addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd402) + op1Offset;
-//			// Space
-//			else if (curX >= 10'd423 && curX < 10'd444)
-//				addrToRead <= 19'd1923;
-//			// 1
-//			else if (curX >= 10'd444 && curX < 10'd465)
-//				addrToRead <= zero + (19'd525 * 19'd1) + (curX - 10'd444) + op1Offset;
-//			// P
-//			else if (curX >= 10'd465 && curX < 10'd486)
-//				addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd465) + op1Offset;
-//			// Space
-//			else if (curX >= 10'd486 && curX < 10'd507)
-//				addrToRead <= 19'd1923;
-//			else
-//				addrToRead <= 19'd1923;
-//		end
+		// Option One (Play 1P) and Option Four (Top 1P)
+		else if (curY >= 10'd227 && curY < 10'd252)
+		begin
+			// Option One
+			if (curX >= 10'd133 && curX < 10'd380)
+			begin
+				// P
+				if (curX >= 10'd133 && curX < 10'd154)
+					addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd133) + op1Offset;
+				// L
+				else if (curX >= 10'd154 && curX < 10'd175)
+					addrToRead <= zero + (19'd525 * 19'd21) + (curX - 10'd154) + op1Offset;
+				// A
+				else if (curX >= 10'd175 && curX < 10'd196)
+					addrToRead <= zero + (19'd525 * 19'd10) + (curX - 10'd175) + op1Offset;
+				// Y
+				else if (curX >= 10'd196 && curX < 10'd217)
+					addrToRead <= zero + (19'd525 * 19'd34) + (curX - 10'd196) + op1Offset;
+	//			// Space
+	//			else if (curX >= 10'd217 && curX < 10'd238)
+	//				addrToRead <= 19'd1923;
+				// 1
+				else if (curX >= 10'd238 && curX < 10'd259)
+					addrToRead <= zero + (19'd525 * 19'd1) + (curX - 10'd238) + op1Offset;
+				// P
+				else if (curX >= 10'd259 && curX < 10'd380)
+					addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd259) + op1Offset;
+				else
+					addrToRead <= 19'd1923;					
+			end
+			
+			// Option Four
+			else if (curX >= 10'd360 && curX < 10'd507)
+			begin
+				// T
+				if (curX >= 10'd360 && curX < 10'd381)
+					addrToRead <= zero + (19'd525 * 19'd29) + (curX - 10'd360) + op1Offset;
+				// O
+				else if (curX >= 10'd381 && curX < 10'd402)
+					addrToRead <= zero + (19'd525 * 19'd24) + (curX - 10'd381) + op1Offset;
+				// P
+				else if (curX >= 10'd402 && curX < 10'd423)
+					addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd402) + op1Offset;
+	//			// Space
+	//			else if (curX >= 10'd423 && curX < 10'd444)
+	//				addrToRead <= 19'd1923;
+				// 1
+				else if (curX >= 10'd444 && curX < 10'd465)
+					addrToRead <= zero + (19'd525 * 19'd1) + (curX - 10'd444) + op1Offset;
+				// P
+				else if (curX >= 10'd465 && curX < 10'd486)
+					addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd465) + op1Offset;
+	//			// Space
+	//			else if (curX >= 10'd486 && curX < 10'd507)
+	//				addrToRead <= 19'd1923;
+				else
+					addrToRead <= 19'd1923;
+			end
+			else
+				addrToRead <= 19'd1923;
+		end
 //		// Option Two (Endless) and Option Five (Top end)
 //		else if (curY >= 10'd285 && curY < 10'd247)
 //		begin
@@ -217,6 +228,7 @@ module vga_mainmenu_processor(curAddress,
 	end
 	
 	always
+	begin
 		// Set up Border
 		if (curY < 10'd3 || curY > 10'd476 || curX < 10'd3 || curX > 10'd636)
 			indexOut <= 8'd7;
@@ -235,6 +247,8 @@ module vga_mainmenu_processor(curAddress,
 			indexOut <= 8'd7;
 		else
 		indexOut <= indexIn;
+	end
+	
 	always
 		colorOut <= colorIn;
 	
