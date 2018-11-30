@@ -76,7 +76,9 @@ reg [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y, vga_score, vga_type, vga_mode
 //////////////////////////
 
 wire[2:0] mode;
+wire[28:0] metadata;
 assign mode = screenMode[31:29];
+assign metadata = screenMode[28:0];
 
 wire[18:0] addr0, addr1, addr2, addr3;
 
@@ -115,9 +117,15 @@ imgrom	img_index_inst (
 	
 ////// SCREEN MODE 0 LOGIC
 
-assign addr0 = ADDR;
-assign rgb_display0 = bgr;
-assign index0 = q_imgmem;
+vga_mainmenu_processor main_menu(.curAddress(ADDR),
+											.addrToRead(addr0),
+											.indexIn(q_imgmem),
+											.indexOut(index0),
+											.colorIn(bgr),
+											.colorOut(rgb_display0),
+											.score(vga_score),
+											.metadata(metadata)
+											);
 	
 ////// SCREEN MODE 1 LOGIC
 vga_processor myGameProcessor(.seconds(sysTime),
