@@ -36,7 +36,85 @@ j endgame_input_loop;
 # Parse the score
 # -------------------------------
 endgame_parse_score:
-
+sw $21, 100($0);
+sra $4, $15, 26;
+addi $5, $0, 1;
+and $4, $4, $5;
+addi $5, $0, 10;# 10 for division
+addi $6, $0, 0; # digit3
+addi $7, $0, 0; # digit2
+addi $8, $0, 0; # digit1
+bne $4, $0, 1;
+j endgame_parse_time;
+# Parse score register into lines digits
+addi $4, $0, 100; # decimal
+# score / 100 and score % 100
+endgame_parse_line_score_div_100:
+blt $21, $4, 3;
+addi $7, $7, 1;
+sub $21, $21, $4;
+j endgame_parse_line_score_div_100;
+# (score / 100) / 10 and (score / 100) % 10
+endgame_parse_line_thousands_div_ten:
+blt $7, $5, 3;
+addi $6, $6, 1;
+sub $7, $7, $5;
+j endgame_parse_line_thousands_div_ten;
+# (score % 100) / 10 and (score % 100) % 10
+endgame_parse_time_hundreds_div_ten:
+blt $8, $5, 3;
+addi $8, $8, 1;
+sub $21, $21, $5;
+j endgame_parse_time_hundreds_div_ten;
+# sanity check
+addi $4, $0, 15;
+and $6, $6, $4;
+and $7, $7, $4;
+and $8, $8, $4;
+and $21, $21, $4;
+# Shift values and add together
+sll $6, $6, 12;
+sll $7, $7, 8;
+sll $8, $8, 4;
+add $21, $6, $21;
+add $21, $7, $21;
+add $21, $8, $21;
+jr $31;
+# Parse score register into time digits
+endgame_parse_time:
+addi $4, $0, 60; # seconds
+# Score / 60 and score % 60
+endgame_parse_time_score_div_sixty:
+blt $21, $4, 3;
+addi $7, $7, 1;
+sub $21, $21, $4;
+j endgame_parse_time_score_div_sixty;
+# (score / 60) / 10 and (score / 60) % 10
+endgame_parse_time_min_div_ten:
+blt $7, $5, 3;
+addi $6, $6, 1;
+sub $7, $7, $5;
+j endgame_parse_time_min_div_ten;
+# (score % 60) / 10 and (score % 60) % 10
+endgame_parse_time_sec_div_ten:
+blt $8, $5, 3;
+addi $8, $8, 1;
+sub $21, $21, $5;
+j endgame_parse_time_sec_div_ten;
+# sanity check
+addi $4, $0, 15;
+and $6, $6, $4;
+and $7, $7, $4;
+and $8, $8, $4;
+and $21, $21, $4;
+# Shift values and add together
+sll $6, $6, 12;
+sll $7, $7, 8;
+sll $8, $8, 4;
+add $21, $6, $21;
+add $21, $7, $21;
+add $21, $8, $21;
+jr $31;
 # -------------------------------
 # Handle Input
 # -------------------------------
@@ -248,7 +326,12 @@ sll $15, $1, 29;
 j gameonep;
 # Transition to leaderboards
 endgame_to_leaderboard:
-jal endgame_save_score;
+# Get unparsed score and associated name
+lw $1, 100($0); # current score
+addi $2, $0, 511;
+sll $2, $2, 9;
+addi $2, $2, 511;
+and $2, $15, $2; # current name
 # Check which leaderboard
 sra $4, $15, 26;
 addi $5, $0, 1;
@@ -256,15 +339,64 @@ and $4, $4, $5;
 bne $4, $0, 1;
 j endgame_to_toponep;
 # Transition to Endless Scores
+jal endgame_save_line;
 # TODO: put correct values************************************************************
 addi $1, $0, 6;
 j infinity;
 # Transition to 1P Scores
 endgame_to_toponep:
+jal endgame_save_time
 # TODO: put correct values************************************************************
 addi $1, $0, 5;
 j infinity;
 # -------------------------------
 # Store name and score
 # -------------------------------
-endgame_save_score:
+# Store new line record
+endgame_save_line:
+lw $3, 10($0); # 1 score
+lw $4, 11($0); # 1 name
+lw $5, 12($0); # 2 score
+lw $6, 13($0); # 2 name
+lw $7, 14($0); # 3 score
+lw $8, 15($0); # 3 name
+# Compare Cur and 1
+blt $1, $3, 4;
+sw $1, 10($0);
+sw $2, 11($0);
+add $1, $3, $0;
+add $2, $4, $0;
+# Compare Cur and 2
+blt $1, $5, 4;
+sw $1, 12($0);
+sw $2, 13($0);
+add $1, $5, $0;
+add $2, $6, $0;
+# Regardlesss, overwrite 3
+sw $1, 14($0);
+sw $2, 15($0);
+jr $31;
+# Store new time record
+endgame_save_time:
+lw $3, 0($0); # 1 score
+lw $4, 1($0); # 1 name
+lw $5, 2($0); # 2 score
+lw $6, 3($0); # 2 name
+lw $7, 4($0); # 3 score
+lw $8, 5($0); # 3 name
+# Compare Cur and 1
+blt $3, $1, 4;
+sw $1, 0($0);
+sw $2, 1($0);
+add $1, $3, $0;
+add $2, $4, $0;
+# Compare Cur and 2
+blt $5, $1, 4;
+sw $1, 2($0);
+sw $2, 3($0);
+add $1, $5, $0;
+add $2, $6, $0;
+# Regardlesss, overwrite 3
+sw $1, 4($0);
+sw $2, 5($0);
+jr $31;
