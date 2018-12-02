@@ -162,14 +162,14 @@ addi $20, $0, 106
 addi $22, $0, 160
 addi $23, $0, 80
 
-addi $24, $0, 140
-addi $25, $0, 80
+addi $28, $0, 140
+addi $29, $0, 80
 
 addi $26, $0, 140
 addi $27, $0, 60
 
-addi $28, $0, 140
-addi $29, $0, 40
+addi $24, $0, 140
+addi $25, $0, 40
 j startgameloop
 
 tFour:
@@ -178,14 +178,14 @@ addi $20, $0, 35
 addi $22, $0, 140
 addi $23, $0, 80
 
-addi $24, $0, 160
-addi $25, $0, 80
+addi $28, $0, 160
+addi $29, $0, 80
 
 addi $26, $0, 160
 addi $27, $0, 60
 
-addi $28, $0, 160
-addi $29, $0, 40
+addi $24, $0, 160
+addi $25, $0, 40
 j startgameloop
 
 tFive:
@@ -194,14 +194,14 @@ addi $20, $0, 108
 addi $22, $0, 160
 addi $23, $0, 60
 
-addi $24, $0, 140
-addi $25, $0, 60
+addi $28, $0, 140
+addi $29, $0, 60
 
 addi $26, $0, 140
 addi $27, $0, 40
 
-addi $28, $0, 120
-addi $29, $0, 60
+addi $24, $0, 120
+addi $25, $0, 60
 j startgameloop
 
 tSix:
@@ -762,12 +762,12 @@ bne $20, $2, rfour
 lw $2, 0($0)
 bne $2, $0, rthreesone
 
-addi $27, $27, -20
+addi $27, $27, 20
 addi $26, $26, 20
-addi $25, $25, -40
+addi $25, $25, 40
 addi $24, $24, 40
-addi $23, $23, -60
-addi $22, $22, 60
+addi $23, $23, 20
+addi $22, $22, -20
 
 addi $2, $2, 1
 sw $2, 0($0)
@@ -781,8 +781,8 @@ addi $27, $27, 20
 addi $26, $26, -20
 addi $25, $25, 40
 addi $24, $24, -40
-addi $23, $23, 60
-addi $22, $22, -60
+addi $23, $23, -20
+addi $22, $22, -20
 
 addi $2, $1, 1
 sw $2, 0($0)
@@ -792,12 +792,12 @@ rthreestwo:
 addi $3, $0, 2
 bne $2, $3, rthreesthree
 
-addi $27, $27, 20
+addi $27, $27, -20
 addi $26, $26, -20
-addi $25, $25, 40
+addi $25, $25, -40
 addi $24, $24, -40
-addi $23, $23, 60
-addi $22, $22, -60
+addi $23, $23, -20
+addi $22, $22, 20
 
 addi $2, $2, 1
 sw $2, 0($0)
@@ -805,12 +805,12 @@ jr $31
 
 rthreesthree:
 
-addi $27, $27, 20
-addi $26, $26, -20
-addi $25, $25, 40
-addi $24, $24, -40
-addi $23, $23, 60
-addi $22, $22, -60
+addi $27, $27, -20
+addi $26, $26, 20
+addi $25, $25, -40
+addi $24, $24, 40
+addi $23, $23, 20
+addi $22, $22, 20
 
 sw $0, 0($0)
 jr $31
