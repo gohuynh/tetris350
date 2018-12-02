@@ -3,8 +3,6 @@ module vga_processor(seconds,
 							addrToRead,
 							indexIn,
 							indexOut,
-							colorIn,
-							colorOut,
 							b1x,
 							b1y,
 							b2x,
@@ -19,16 +17,13 @@ module vga_processor(seconds,
 	input [15:0] seconds;
 	input [18:0] curAddress;
 	input [7:0] indexIn;
-	input [23:0] colorIn;
 	input [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y;
 	input [31:0] score, blockType;
 	
 	output [18:0] addrToRead;
 	output [7:0] indexOut;
-	output [23:0] colorOut;
 	reg [18:0] addrToRead;
 	reg [7:0] indexOut;
-	reg [23:0] colorOut;
 	
 	wire [9:0] curX, curY;
 	addr_to_cart addrCoord(curAddress, curX, curY);
@@ -79,10 +74,10 @@ module vga_processor(seconds,
 	
 	always @(seconds)
 	begin
-		sec0 <= (seconds % 16'd60) % 16'd10;
-		sec1 <= (seconds % 16'd60) / 16'd10;
-		min0 <= (seconds / 16'd60) % 16'd10;
-		min1 <= (seconds / 16'd60) / 16'd10;
+		sec0 <= (seconds[13:0] % 14'd60) % 14'd10;
+		sec1 <= (seconds[13:0] % 14'd60) / 14'd10;
+		min0 <= (seconds[13:0] / 14'd60) % 14'd10;
+		min1 <= (seconds[13:0] / 14'd60) / 14'd10;
 	end
 	
 	always @(curY or curX)
@@ -234,8 +229,5 @@ module vga_processor(seconds,
 		else
 			indexOut <= indexIn;
 	end
-	
-	always
-		colorOut <= colorIn;
 
 endmodule

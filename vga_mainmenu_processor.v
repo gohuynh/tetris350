@@ -2,24 +2,17 @@ module vga_mainmenu_processor(curAddress,
 										addrToRead,
 										indexIn,
 										indexOut,
-										colorIn,
-										colorOut,
-										score,
 										metadata
 										);
 
 	input [18:0] curAddress;
 	input [7:0] indexIn;
-	input [23:0] colorIn;
-	input [31:0] score;
 	input [28:0] metadata;
 	
 	output [18:0] addrToRead;
 	output [7:0] indexOut;
-	output [23:0] colorOut;
 	reg [18:0] addrToRead;
 	reg [7:0] indexOut;
-	reg [23:0] colorOut;
 	
 	wire [9:0] curX, curY;
 	addr_to_cart addrCoord(curAddress, curX, curY);
@@ -269,7 +262,5 @@ module vga_mainmenu_processor(curAddress,
 		indexOut <= indexIn;
 	end
 	
-	always
-		colorOut <= colorIn;
 	
 endmodule

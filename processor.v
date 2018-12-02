@@ -86,6 +86,7 @@ module processor(
 	 // In Game Timing
 	 counter,
 	 seconds
+	 
 	
 );
     // Control signals
@@ -459,7 +460,7 @@ module processor(
 	 regEqual regEqualXMRT(xRt, mRd, xmRDRTMatch);
 	 
 	 and andMBypassA(mBypassABool, xmRDRSMatch, mWReg, ~xmRDZero);
-	 and andMBypassB(mBypassBBool, xmRDRTMatch, mWReg, ~xmRDZero, );
+	 and andMBypassB(mBypassBBool, xmRDRTMatch, mWReg, ~xmRDZero);
 	 
 	 assign mBypass = mO;
 	 
