@@ -275,16 +275,16 @@ module vga_endgame_processor(curAddress,
 				if (curX >= 10'd267 && curX < 10'd288)
 					addrToRead <= zero + (19'd525 * digit3) + (curX - 10'd267) + scoreOffset;
 				// digit2
-				if (curX >= 10'd288 && curX < 10'd309)
+				else if (curX >= 10'd288 && curX < 10'd309)
 					addrToRead <= zero + (19'd525 * digit2) + (curX - 10'd288) + scoreOffset;
 				// colon
-				if (curX >= 10'd314 && curX < 10'd325)
+				else if (curX >= 10'd314 && curX < 10'd325)
 					addrToRead <= 19'd266052 + (curX - 10'd314) + colonOffset;
 				// digit1
-				if (curX >= 10'd330 && curX < 10'd351)
+				else if (curX >= 10'd330 && curX < 10'd351)
 					addrToRead <= zero + (19'd525 * digit1) + (curX - 10'd330) + scoreOffset;
 				// digit0
-				if (curX >= 10'd351 && curX < 10'd372)
+				else if (curX >= 10'd351 && curX < 10'd372)
 					addrToRead <= zero + (19'd525 * digit0) + (curX - 10'd351) + scoreOffset;
 				else
 					addrToRead <= 19'd1923;
@@ -297,16 +297,16 @@ module vga_endgame_processor(curAddress,
 				if (curX >= 10'd267 && curX < 10'd288)
 					addrToRead <= zero + (curX - 10'd267) + scoreOffset;
 				// digit3
-				if (curX >= 10'd288 && curX < 10'd309)
+				else if (curX >= 10'd288 && curX < 10'd309)
 					addrToRead <= zero + (19'd525 * digit3) + (curX - 10'd288) + scoreOffset;
 				// digit2
-				if (curX >= 10'd309 && curX < 10'd330)
-					addrToRead <= zero + (19'd525 * digit2) + (curX - 10'd288) + scoreOffset;
+				else if (curX >= 10'd309 && curX < 10'd330)
+					addrToRead <= zero + (19'd525 * digit2) + (curX - 10'd309) + scoreOffset;
 				// digit1
-				if (curX >= 10'd330 && curX < 10'd351)
+				else if (curX >= 10'd330 && curX < 10'd351)
 					addrToRead <= zero + (19'd525 * digit1) + (curX - 10'd330) + scoreOffset;
 				// digit0
-				if (curX >= 10'd351 && curX < 10'd372)
+				else if (curX >= 10'd351 && curX < 10'd372)
 					addrToRead <= zero + (19'd525 * digit0) + (curX - 10'd351) + scoreOffset;
 				else
 					addrToRead <= 19'd1923;
@@ -336,7 +336,7 @@ module vga_endgame_processor(curAddress,
 					addrToRead <= zero + (19'd525 * 19'd23) + (curX - 10'd166) + screenOpOffset;
 //				// Space
 //				else if (curX >= 10'd187 && curX < 10'd208)
-//					addrToRead <= zero + (19'd525 * 19'd23) + (curX - 10'd187) + screenOpOffset;
+//					addrToRead <= zero + (19'd525 * 19'd35) + (curX - 10'd187) + screenOpOffset;
 				// M
 				else if (curX >= 10'd208 && curX < 10'd229)
 					addrToRead <= zero + (19'd525 * 19'd22) + (curX - 10'd208) + screenOpOffset;
@@ -351,7 +351,7 @@ module vga_endgame_processor(curAddress,
 					addrToRead <= zero + (19'd525 * 19'd30) + (curX - 10'd271) + screenOpOffset;
 				
 				else
-					addrToRead <= 10'd1923;
+					addrToRead <= 19'd1923;
 			end
 			
 			// Restart Option
@@ -380,7 +380,7 @@ module vga_endgame_processor(curAddress,
 					addrToRead <= zero + (19'd525 * 19'd29) + (curX - 10'd495) + screenOpOffset;
 				
 				else
-					addrToRead <= 10'd1923;
+					addrToRead <= 19'd1923;
 			end
 			
 			else

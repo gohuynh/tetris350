@@ -174,8 +174,18 @@ vga_endgame_processor endgame(.curAddress(ADDR),
 
 ////// SCREEN MODE 5 LOGIC
 
-assign addr5 = ADDR;
-assign index5 = q_imgmem;
+vga_top1p_processor top1p(.curAddress(ADDR),
+								  .addrToRead(addr5),
+								  .indexIn(q_imgmem),
+								  .indexOut(index5),
+								  .name1(b1x),
+								  .score1(b1y),
+							     .name2(b2x),
+								  .score2(b2y),
+								  .name3(b3x),
+								  .score3(b3y),
+								  .metadata(metadata)
+								  );
 
 ////// SCREEN MODE 6 LOGIC
 
