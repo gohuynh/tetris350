@@ -57,7 +57,7 @@ begin
 end
 
 /////////////////////
-reg [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y, vga_score, vga_type, vga_mode;
+reg [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y, vga_score, vga_type;
 	 
 	 always @(posedge iVGA_CLK)
 	 begin
@@ -71,7 +71,6 @@ reg [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y, vga_score, vga_type, vga_mode
 		b4y <= block4y;
 		vga_score <= score;
 		vga_type <= blockType;
-		vga_mode <= screenMode;
 	 end
 //////////////////////////
 
@@ -80,34 +79,44 @@ wire[28:0] metadata;
 assign mode = screenMode[31:29];
 assign metadata = screenMode[28:0];
 
-wire[18:0] addr0, addr1, addr2, addr3;
+wire[18:0] addr0, addr1, addr2, addr3, addr4, addr5, addr6, addr7;
 
 assign addr_imgmem = mode == 3'd0 ? addr0 : 19'dz;
 assign addr_imgmem = mode == 3'd1 ? addr1 : 19'dz;
 assign addr_imgmem = mode == 3'd2 ? addr2 : 19'dz;
 assign addr_imgmem = mode == 3'd3 ? addr3 : 19'dz;
+assign addr_imgmem = mode == 3'd4 ? addr4 : 19'dz;
+assign addr_imgmem = mode == 3'd5 ? addr5 : 19'dz;
+assign addr_imgmem = mode == 3'd6 ? addr6 : 19'dz;
+assign addr_imgmem = mode == 3'd7 ? addr7 : 19'dz;
 
 wire [7:0] index;
-wire [7:0] index0, index1, index2, index3;
+wire [7:0] index0, index1, index2, index3, index4, index5, index6, index7;
 assign index = mode == 3'd0 ? index0 : 8'dz;
 assign index = mode == 3'd1 ? index1 : 8'dz;
 assign index = mode == 3'd2 ? index2 : 8'dz;
 assign index = mode == 3'd3 ? index3 : 8'dz;
+assign index = mode == 3'd4 ? index4 : 8'dz;
+assign index = mode == 3'd5 ? index5 : 8'dz;
+assign index = mode == 3'd6 ? index6 : 8'dz;
+assign index = mode == 3'd7 ? index7 : 8'dz;
 
-wire [23:0] rgb_display;
-wire [23:0] rgb_display0, rgb_display1, rgb_display2, rgb_display3;
-assign rgb_display = mode == 3'd0 ? rgb_display0 : 24'dz;
-assign rgb_display = mode == 3'd1 ? rgb_display1 : 24'dz;
-assign rgb_display = mode == 3'd2 ? rgb_display2 : 24'dz;
-assign rgb_display = mode == 3'd3 ? rgb_display3 : 24'dz;
-
+//wire [23:0] rgb_display;
+//wire [23:0] rgb_display0, rgb_display1, rgb_display2, rgb_display3, rgb_display4, rgb_display5,
+//				rgb_display6, rgb_display7;
+//assign rgb_display = mode == 3'd0 ? rgb_display0 : 24'dz;
+//assign rgb_display = mode == 3'd1 ? rgb_display1 : 24'dz;
+//assign rgb_display = mode == 3'd2 ? rgb_display2 : 24'dz;
+//assign rgb_display = mode == 3'd3 ? rgb_display3 : 24'dz;
+//assign rgb_display = mode == 3'd4 ? rgb_display4 : 24'dz;
+//assign rgb_display = mode == 3'd5 ? rgb_display5 : 24'dz;
+//assign rgb_display = mode == 3'd6 ? rgb_display6 : 24'dz;
+//assign rgb_display = mode == 3'd7 ? rgb_display7 : 24'dz;
 
 //////INDEX addr.
 assign VGA_CLK_n = ~iVGA_CLK;
 //wire [7:0] index;
 wire [23:0] bgr;
-//assign addr_imgmem = ADDR;
-//assign index = q_imgmem;
 //////Color table output
 imgrom	img_index_inst (
 	.address ( index ),
@@ -121,9 +130,6 @@ vga_mainmenu_processor main_menu(.curAddress(ADDR),
 											.addrToRead(addr0),
 											.indexIn(q_imgmem),
 											.indexOut(index0),
-											.colorIn(bgr),
-											.colorOut(rgb_display0),
-											.score(vga_score),
 											.metadata(metadata)
 											);
 	
@@ -133,8 +139,6 @@ vga_processor myGameProcessor(.seconds(sysTime),
 										.addrToRead(addr1),
 										.indexIn(q_imgmem),
 										.indexOut(index1),
-										.colorIn(bgr),
-										.colorOut(rgb_display1),
 										.b1x(b1x),
 										.b1y(b1y),
 										.b2x(b2x),
@@ -151,17 +155,40 @@ vga_processor myGameProcessor(.seconds(sysTime),
 ////// SCREEN MODE 2 LOGIC
 
 assign addr2 = ADDR;
-assign rgb_display2 = bgr;
 assign index2 = q_imgmem;
 
 ////// SCREEN MODE 3 LOGIC
 
 assign addr3 = ADDR;
-assign rgb_display3 = bgr;
 assign index3 = q_imgmem;
 
+////// SCREEN MODE 4 LOGIC
+
+vga_endgame_processor endgame(.curAddress(ADDR),
+									   .addrToRead(addr4),
+									   .indexIn(q_imgmem),
+									   .indexOut(index4),
+									   .score(vga_score),
+									   .metadata(metadata)
+									   );
+
+////// SCREEN MODE 5 LOGIC
+
+assign addr5 = ADDR;
+assign index5 = q_imgmem;
+
+////// SCREEN MODE 6 LOGIC
+
+assign addr6 = ADDR;
+assign index6 = q_imgmem;
+
+////// SCREEN MODE 7 LOGIC
+
+assign addr7 = ADDR;
+assign index7 = q_imgmem;
+
 //////latch valid data at falling edge;
-always@(posedge VGA_CLK_n) bgr_data <= rgb_display;
+always@(posedge VGA_CLK_n) bgr_data <= bgr;
 assign b_data = bgr_data[23:16];
 assign g_data = bgr_data[15:8];
 assign r_data = bgr_data[7:0]; 

@@ -19,10 +19,12 @@ module tetris(clock,
 	 DEBUG_gamemode,
 	 DEBUG_mode
 //	 outy
-//	 dataToReg
+//	 dataToReg,
+//	 regdest
 	 );
 	 
 //	 output [31:0] dataToReg;
+//	 output [4:0] regdest;
 //	output [31:0] outy;
 	input [15:0] DEBUG_gamemode;
 	input DEBUG_mode;
@@ -76,7 +78,7 @@ module tetris(clock,
 		if (reset || changeReset)
 		begin
 			counter <= 26'd0;
-			seconds <= 26'd0;
+			seconds <= 16'd0;
 		end
 		else if (counter > 26'd50000000)
 		begin
@@ -160,7 +162,7 @@ module tetris(clock,
 		  .screenMode(screenMode)
     );
 	 
-	 reg [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y, vga_score, vga_type, vga_mode;
+	 reg [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y, vga_score, vga_type;
 	 
 	 always @(posedge clock)
 	 begin
@@ -174,7 +176,6 @@ module tetris(clock,
 		b4y <= block4y;
 		vga_score <= score;
 		vga_type <= blockType;
-		vga_mode <= screenMode;
 	 end
 	 
 	 // VGA
@@ -251,6 +252,7 @@ module tetris(clock,
     );
 	 
 //	 assign dataToReg = data_writeReg;
+//	 assign regdest = ctrl_writeReg;
 //	assign outy = block1y;
 
 endmodule
