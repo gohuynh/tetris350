@@ -84,8 +84,8 @@ module vga_top1p_processor(curAddress,
 		colon1Offset = (curY - 10'd186)*10'd640;
 		entry2Offset = (curY - 10'd251)*10'd21;
 		colon2Offset = (curY - 10'd251)*10'd640;
-		entry2Offset = (curY - 10'd316)*10'd21;
-		colon2Offset = (curY - 10'd316)*10'd640;
+		entry3Offset = (curY - 10'd316)*10'd21;
+		colon3Offset = (curY - 10'd316)*10'd640;
 	end
 	
 	always
@@ -199,7 +199,7 @@ module vga_top1p_processor(curAddress,
 		begin
 			// 2
 			if (curX >= 10'd302 && curX < 10'd323)
-				addrToRead <= zero + (19'd525 * 19'd2) + (curX - 10'd302) + entry1Offset;
+				addrToRead <= zero + (19'd525 * 19'd2) + (curX - 10'd302) + entry2Offset;
 //			// Space
 //			else if (curX >= 10'd323 && curX < 10'd344)
 //				addrToRead <= zero + (19'd525 * 19'd14) + (curX - 10'd323) + entry1Offset;
@@ -208,13 +208,13 @@ module vga_top1p_processor(curAddress,
 //				addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd344) + entry1Offset;
 			// name2char2
 			else if (curX >= 10'd365 && curX < 10'd386)
-				addrToRead <= zero + (19'd525 * name2char2) + (curX - 10'd365) + entry1Offset;
+				addrToRead <= zero + (19'd525 * name2char2) + (curX - 10'd365) + entry2Offset;
 			// name2char1
 			else if (curX >= 10'd386 && curX < 10'd407)
-				addrToRead <= zero + (19'd525 * name2char1) + (curX - 10'd386) + entry1Offset;
+				addrToRead <= zero + (19'd525 * name2char1) + (curX - 10'd386) + entry2Offset;
 			// name2char0
 			else if (curX >= 10'd407 && curX < 10'd428)
-				addrToRead <= zero + (19'd525 * name2char0) + (curX - 10'd407) + entry1Offset;
+				addrToRead <= zero + (19'd525 * name2char0) + (curX - 10'd407) + entry2Offset;
 //			// Space
 //			else if (curX >= 10'd428 && curX < 10'd449)
 //				addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd428) + entry1Offset;
@@ -249,7 +249,7 @@ module vga_top1p_processor(curAddress,
 		begin
 			// 3
 			if (curX >= 10'd302 && curX < 10'd323)
-				addrToRead <= zero + (19'd525 * 19'd3) + (curX - 10'd302) + entry1Offset;
+				addrToRead <= zero + (19'd525 * 19'd3) + (curX - 10'd302) + entry3Offset;
 //			// Space
 //			else if (curX >= 10'd323 && curX < 10'd344)
 //				addrToRead <= zero + (19'd525 * 19'd14) + (curX - 10'd323) + entry1Offset;
