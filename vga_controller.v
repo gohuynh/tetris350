@@ -101,18 +101,6 @@ assign index = mode == 3'd5 ? index5 : 8'dz;
 assign index = mode == 3'd6 ? index6 : 8'dz;
 assign index = mode == 3'd7 ? index7 : 8'dz;
 
-//wire [23:0] rgb_display;
-//wire [23:0] rgb_display0, rgb_display1, rgb_display2, rgb_display3, rgb_display4, rgb_display5,
-//				rgb_display6, rgb_display7;
-//assign rgb_display = mode == 3'd0 ? rgb_display0 : 24'dz;
-//assign rgb_display = mode == 3'd1 ? rgb_display1 : 24'dz;
-//assign rgb_display = mode == 3'd2 ? rgb_display2 : 24'dz;
-//assign rgb_display = mode == 3'd3 ? rgb_display3 : 24'dz;
-//assign rgb_display = mode == 3'd4 ? rgb_display4 : 24'dz;
-//assign rgb_display = mode == 3'd5 ? rgb_display5 : 24'dz;
-//assign rgb_display = mode == 3'd6 ? rgb_display6 : 24'dz;
-//assign rgb_display = mode == 3'd7 ? rgb_display7 : 24'dz;
-
 //////INDEX addr.
 assign VGA_CLK_n = ~iVGA_CLK;
 //wire [7:0] index;
@@ -174,13 +162,35 @@ vga_endgame_processor endgame(.curAddress(ADDR),
 
 ////// SCREEN MODE 5 LOGIC
 
-assign addr5 = ADDR;
-assign index5 = q_imgmem;
+vga_top1p_processor top1p(.curAddress(ADDR),
+								  .addrToRead(addr5),
+								  .indexIn(q_imgmem),
+								  .indexOut(index5),
+								  .name1(b1x),
+								  .score1(b1y),
+							     .name2(b2x),
+								  .score2(b2y),
+								  .name3(b3x),
+								  .score3(b3y),
+								  .metadata(metadata)
+								  );
 
 ////// SCREEN MODE 6 LOGIC
 
-assign addr6 = ADDR;
-assign index6 = q_imgmem;
+vga_topend_processor	topEnd(.curAddress(ADDR),
+									 .addrToRead(addr6),
+									 .indexIn(q_imgmem),
+									 .indexOut(index6),
+									 .name1(b1x),
+									 .score1(b1y),
+									 .name2(b2x),
+									 .score2(b2y),
+									 .name3(b3x),
+									 .score3(b3y),
+									 .metadata(metadata)
+									 );
+//assign addr6 = ADDR;
+//assign index6 = q_imgmem;
 
 ////// SCREEN MODE 7 LOGIC
 

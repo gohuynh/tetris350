@@ -1,8 +1,8 @@
 mainmenu:
 # Change screen and set up registers
 add $15, $0, $0;
-addi $1, $0, 65000;
-sll $1, $1, 8;
+addi $1, $0, 40625;
+sll $1, $1, 5;
 add $2, $0, $0;
 # Input loop:
 mainmenu_input_loop:
@@ -15,7 +15,6 @@ j mainmenu_input_loop;
 mainmenu_handle_input:
 ri $3;
 addi $4, $0, 4;
-and $3, $3, $4;
 bne $3, $4, 1;
 j mainmenu_toggle;
 addi $4, $0, 8;
@@ -59,21 +58,21 @@ sll $15, $1, 29;
 j gameonep;
 # Transition to Endless mode
 mainmenu_to_end:
-# TODO: put correct values
+# TODO: put correct values*************************************************************
 addi $1, $0, 2;
 j infinity;
 # Transition to 2P mode
 mainmenu_to_twop:
-# TODO: put correct values
+# TODO: put correct values*************************************************************
 addi $1, $0, 3;
 j infinity;
 # Transition to 1P Scores
 mainmenu_to_toponep:
-# TODO: put correct values
+# TODO: put correct values*************************************************************
 addi $1, $0, 5;
 j infinity;
 # Transition to Endless Scores
 mainmenu_to_topend:
-# TODO: put correct values
+# TODO: put correct values*************************************************************
 addi $1, $0, 6;
 j infinity;
