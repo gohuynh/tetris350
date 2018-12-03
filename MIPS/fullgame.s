@@ -1,7 +1,7 @@
 addi $21, $0, 154;
 addi $1, $0, 4; # Screen Mode
 sll $1, $1, 3;
-addi $1, $1, 2; # result and type
+addi $1, $1, 5; # result and type
 sll $15, $1, 26;
 j endgame;
 # ======================================================================================================
@@ -424,10 +424,7 @@ bne $4, $0, 1;
 j endgame_to_toponep;
 # Transition to Endless Scores
 jal endgame_save_line;
-# TODO: put correct values************************************************************
-addi $1, $0, 6;
-sll $15, $1, 29;
-j infinity;
+j topend;
 # Transition to 1P Scores
 endgame_to_toponep:
 jal endgame_save_time
