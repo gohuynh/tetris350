@@ -650,12 +650,23 @@ addi  $18,   $0,   410
 addi  $17,   $0,   70
 addi $16, $0, 640
 
+addi $9, $0, 1000
+addi $2, $0, 65335
+sll $2, $2, 7
+sw $2, 2($9)
+
 addi $2, $0, 12900
 # $1 has the color black
 ilw $1, 0($2)
 
 # rows left
-addi $21, $0, 10
+addi $2, $0, 1
+and $3, $2, $15
+bne $3, $2, 2
+addi $21, $0, 0
+j newblock
+addi $21, $0, 4
+
 # top level loop, start here for each new block
 newblock:
 
@@ -794,9 +805,30 @@ addi $29, $0, 40
 
 
 startgameloop:
+# check if game is over
+mul $11, $16, $29
+add $11, $11, $28
+ilw $11, 0($11)
+bne $11, $1, gl
+
+mul $11, $16, $27
+add $11, $11, $26
+ilw $11, 0($11)
+bne $11, $1, gl
+
+mul $11, $16, $26
+add $11, $11, $25
+ilw $11, 0($11)
+bne $11, $1, gl
+
+mul $11, $16, $23
+add $11, $11, $22
+ilw $11, 0($11)
+bne $11, $1, gl
+
 #time til move down
-addi $5, $0, 65335
-sll $5, $5, 8
+addi $9, $0, 1000
+lw $5, 2($9)
 # time til button check
 addi $6, $0, 65335
 sll $6, $6, 4
@@ -805,8 +837,8 @@ innerloop:
 addi $5, $5, -1
 bne $0, $5, buttontimer
 jal movedown
-addi $5, $0, 65335
-sll $5, $5, 8
+addi $9, $0, 1000
+lw $5, 2($9)
 
 buttontimer:
 addi $6, $6, -1
@@ -1002,7 +1034,6 @@ addi $13, $13, 620
 addi $4, $4, 1
 blt $4, $2, toploopfour
 
-
 # save complete, now check if any line needs to be cleared
 # $2, $3, $4, $7, $8, $9, $10, $11
 # checking the row of cell1
@@ -1056,6 +1087,17 @@ addi $11, $11, -12800
 addi $3, $11, 0
 blt $14, $11, clearloopfour
 
+addi $2, $0, 1
+and $3, $15, $2
+bne $3, $2, notendless
+addi $21, $21, 1
+addi $8, $0, 1000
+lw $14, 1($8)
+addi $14, $14, 1
+sw $14, 1($8)
+j ccstarttwo
+# add for endless mode, subtract for 1p
+notendless:
 addi $21, $21, -1
 
 ccstarttwo:
@@ -1105,6 +1147,17 @@ addi $11, $11, -12800
 addi $3, $11, 0
 blt $14, $11, clearloopfourb
 
+addi $2, $0, 1
+and $3, $15, $2
+bne $3, $2, notendlessb
+addi $21, $21, 1
+addi $8, $0, 1000
+lw $14, 1($8)
+addi $14, $14, 1
+sw $14, 1($8)
+j ccstartthree
+# add for endless mode, subtract for 1p
+notendlessb:
 addi $21, $21, -1
 
 ccstartthree:
@@ -1154,6 +1207,17 @@ addi $11, $11, -12800
 addi $3, $11, 0
 blt $14, $11, clearloopfourc
 
+addi $2, $0, 1
+and $3, $15, $2
+bne $3, $2, notendlessc
+addi $21, $21, 1
+addi $8, $0, 1000
+lw $14, 1($8)
+addi $14, $14, 1
+sw $14, 1($8)
+j ccstartfour
+# add for endless mode, subtract for 1p
+notendlessc:
 addi $21, $21, -1
 
 ccstartfour:
@@ -1203,37 +1267,103 @@ addi $11, $11, -12800
 addi $3, $11, 0
 blt $14, $11, clearloopfourd
 
+addi $2, $0, 1
+and $3, $15, $2
+bne $3, $2, notendlessd
+addi $21, $21, 1
+addi $8, $0, 1000
+lw $14, 1($8)
+addi $14, $14, 1
+sw $14, 1($8)
+j endcheck
+# add for endless mode, subtract for 1p
+notendlessd:
 addi $21, $21, -1
 
 endcheck:
-# check if game was won
+addi $2, $0, 1
+and $3, $15, $2
+# check if endless
+blt $0, $3, 3
+#check if game was won if not endless
 addi $14, $0, 1
 blt $21, $14, gw
+j newblock
+# check if 5 lines have been cleared if endless
+addi $3, $0, 1000
+lw $2, 1($3)
+addi $14, $0, 5
+blt $2, $14, newblock
+# speed up if 5 lines cleared
+addi $4, $0, 5000
+addi $8, $0, 10
+mul $4, $4, $8
+lw $2, 2($3)
+sra $2, $2, 1
+sw $2, 2($3)
 
+addi $2, $0, 0
+sw $2, 1($3)
 j newblock
 
 # game is won
 gw:
 #1p
 # get third place time
-addi $3, $0, 2004
-lw $2, 0($3)
+rsec $21
+lw $2, 4($0)
+blt $2, $21, 3
 
+addi $4, $0, 9
+sll $15, $4, 28
+j egl
+# if theres no new record, do this
+addi $4, $0, 17
+sll $15, $4, 27
 j egl
 
 #stuff that happens when the game is lost
+gl:
+addi $2, $0, 1
+and $3, $2, $15
+bne $3, $2, nnn
+# if its a loss on endless, tell register and check for high score
+lw $3, 14($0)
+#compare lowest high score and current score
+blt $21, $3, 3
+# if the current score is more than the lowest high score, 
+addi $7, $0, 37
+sll $15, $7, 26
+j egl
+# if the current score is less than lowest high score, just lose
+addi $7, $0, 33
+sll $15, $7, 26
+j egl
+nnn:
+# if its a loss on 1p, just reset
+addi $4, $0, 1
+sll $15, $4, 31
 
 #stuff that happens when the game ends
 egl:
-sra $1, $15, 25
-addi $2, $0, 1
-# don't do this for endless mode
-and $1, $1, $2
-bne $1, $2, 1
-rsec $21
-# turn the whole map black
 
-j mainmenu
+# turn the whole map black
+addi $3, $0, 25660
+addi $8, $0, 400
+
+clealooptwo:
+addi $2, $0, 200
+
+clealoopone:
+isw $1, 0($3)
+addi $3, $3, 1
+addi $2, $2, -1
+bne $0, $2, clealoopone
+addi $3, $3, 440
+addi $8, $8, -1
+bne $0, $8, clealooptwo
+
+j endgame
 
 moveright:
 # bounds checks
