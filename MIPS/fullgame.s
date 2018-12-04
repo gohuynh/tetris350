@@ -120,7 +120,8 @@ j endgame_input_loop;
 # Parse the score
 # -------------------------------
 endgame_parse_score:
-sw $21, 100($0);
+addi $11, $0, 2000
+sw $21, 0($11);
 sra $4, $15, 26;
 addi $5, $0, 1;
 and $4, $4, $5;
@@ -411,7 +412,8 @@ j gameonep;
 # Transition to leaderboards
 endgame_to_leaderboard:
 # Get unparsed score and associated name
-lw $1, 100($0); # current score
+addi $11, $0, 2000
+lw $1, 0($11); # current score
 addi $2, $0, 511;
 sll $2, $2, 9;
 addi $2, $2, 511;
@@ -652,24 +654,15 @@ addi $2, $0, 12900
 ilw $1, 0($2)
 
 # rows left
-addi $21, $0, 5678
-sw $0, 0($0)
-
+addi $21, $0, 10
 # top level loop, start here for each new block
 newblock:
 
-#set rotation status to 0 at memory address 0
-sw $0, 0($0)
+#set rotation status to 0 at memory address 1000
+addi $2, $0, 1000
+sw $0, 0($2)
 
-rtick $3
-
-# if $1 < 20(or something) set type to 0
-# else if $1 < 40 set type to 1
-# so on and so forth
-# you can change the addi amount to increase the range if you want
-
-
-
+# select random block
 rtick $3
 addi $2, $0, 127
 and $3, $3, $2
@@ -773,10 +766,10 @@ addi $20, $0, 113
 addi $22, $0, 140
 addi $23, $0, 80
 
-addi $24, $0, 160
+addi $24, $0, 140
 addi $25, $0, 60
 
-addi $26, $0, 140
+addi $26, $0, 160
 addi $27, $0, 60
 
 addi $28, $0, 160
@@ -793,10 +786,10 @@ addi $24, $0, 160
 addi $25, $0, 60
 
 addi $26, $0, 140
-addi $27, $0, 40
+addi $27, $0, 60
 
 addi $28, $0, 140
-addi $29, $0, 60
+addi $29, $0, 40
 
 
 startgameloop:
@@ -1062,6 +1055,7 @@ addi $11, $11, -12800
 addi $3, $11, 0
 blt $14, $11, clearloopfour
 
+addi $21, $21, -1
 
 ccstarttwo:
 addi $2, $0, 10
@@ -1110,6 +1104,7 @@ addi $11, $11, -12800
 addi $3, $11, 0
 blt $14, $11, clearloopfourb
 
+addi $21, $21, -1
 
 ccstartthree:
 addi $2, $0, 10
@@ -1158,6 +1153,8 @@ addi $11, $11, -12800
 addi $3, $11, 0
 blt $14, $11, clearloopfourc
 
+addi $21, $21, -1
+
 ccstartfour:
 addi $2, $0, 10
 mul $3, $16, $23
@@ -1205,8 +1202,37 @@ addi $11, $11, -12800
 addi $3, $11, 0
 blt $14, $11, clearloopfourd
 
+addi $21, $21, -1
+
 endcheck:
+# check if game was won
+addi $14, $0, 1
+blt $21, $14, gw
+
 j newblock
+
+# game is won
+gw:
+#1p
+# get third place time
+addi $3, $0, 2004
+lw $2, 0($3)
+
+j egl
+
+#stuff that happens when the game is lost
+
+#stuff that happens when the game ends
+egl:
+sra $1, $15, 25
+addi $2, $0, 1
+# don't do this for endless mode
+and $1, $1, $2
+bne $1, $2, 1
+rsec $21
+# turn the whole map black
+
+j mainmenu
 
 moveright:
 # bounds checks
@@ -1291,91 +1317,300 @@ rotate:
 #t2
 addi $2, $0, 179
 bne $20, $2, rthree
-
-lw $2, 0($0)
+addi $14, $0, 1000
+lw $2, 0($14)
 bne $2, $0, rtwosone
+# $3, $4, $7, $8, $9, $10, $11
+addi $3, $29, 20
+addi $4, $26, 20
+addi $7, $25, -20
+addi $8, $24, 40
+addi $9, $23, -40
+addi $10, $22, 60
 
-addi $27, $27, -20
-addi $26, $26, 20
-addi $25, $25, -40
-addi $24, $24, 40
-addi $23, $23, -60
-addi $22, $22, 60
+addi $14, $0, 430
+blt $14, $3, nml
+addi $14, $0, 250
+blt $14, $4, nml
+blt $14, $8, nml
+blt $14, $10, nml
+addi $14, $0, 40
+blt $7, $14, nml
+blt $9, $14, nml
+
+mul $11, $16, $3
+add $11, $11, $28
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $27
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $29, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
 
 addi $2, $2, 1
-sw $2, 0($0)
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
 
 rtwosone:
 
-addi $27, $27, 20
-addi $26, $26, -20
-addi $25, $25, 40
-addi $24, $24, -40
-addi $23, $23, 60
-addi $22, $22, -60
+addi $3, $29, -20
+addi $4, $26, -20
+addi $7, $25, 20
+addi $8, $24, -40
+addi $9, $23, 40
+addi $10, $22, -60
 
-sw $0, 0($0)
+addi $14, $0, 430
+blt $14, $7, nml
+blt $14, $9, nml
+addi $14, $0, 60
+blt $4, $14, nml
+blt $8, $14, nml
+blt $10, $14, nml
+addi $14, $0, 40
+blt $3, $14, nml
+
+mul $11, $16, $3
+add $11, $11, $28
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $27
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $29, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
+
+addi $14, $0, 1000
+sw $0, 0($14)
 jr $31
 
 rthree:
 addi $2, $0, 106
 bne $20, $2, rfour
 
-lw $2, 0($0)
+addi $14, $0, 1000
+lw $2, 0($14)
 bne $2, $0, rthreesone
 
-addi $27, $27, 20
-addi $26, $26, 20
-addi $25, $25, 40
-addi $24, $24, 40
-addi $23, $23, 20
-addi $22, $22, -20
+addi $3, $27, 20
+addi $4, $26, 20
+addi $7, $25, 40
+addi $8, $24, 40
+addi $9, $23, 20
+addi $10, $22, -20
+
+addi $14, $0, 430
+blt $14, $3, nml
+blt $14, $7, nml
+blt $14, $9, nml
+addi $14, $0, 250
+blt $14, $4, nml
+blt $14, $8, nml
+addi $14, $0, 60
+blt $10, $14, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
 
 addi $2, $2, 1
-sw $2, 0($0)
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
 
 rthreesone:
 addi $3, $0, 1
 bne $2, $3, rthreestwo
 
-addi $27, $27, 20
-addi $26, $26, -20
-addi $25, $25, 40
-addi $24, $24, -40
-addi $23, $23, -20
-addi $22, $22, -20
+addi $3, $27, 20
+addi $4, $26, -20
+addi $7, $25, 40
+addi $8, $24, -40
+addi $9, $23, -20
+addi $10, $22, -20
 
-addi $2, $1, 1
-sw $2, 0($0)
+addi $14, $0, 430
+blt $14, $3, nml
+blt $14, $7, nml
+addi $14, $0, 60
+blt $4, $14, nml
+blt $8, $14, nml
+blt $10, $14, nml
+addi $14, $0, 40
+blt $9, $14, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
+
+addi $2, $2, 1
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
 
 rthreestwo:
 addi $3, $0, 2
 bne $2, $3, rthreesthree
 
-addi $27, $27, -20
-addi $26, $26, -20
-addi $25, $25, -40
-addi $24, $24, -40
-addi $23, $23, -20
-addi $22, $22, 20
+addi $3, $27, -20
+addi $4, $26, -20
+addi $7, $25, -40
+addi $8, $24, -40
+addi $9, $23, -20
+addi $10, $22, 20
+
+addi $14, $0, 250
+blt $14, $10, nml
+addi $14, $0, 60
+blt $4, $14, nml
+blt $8, $14, nml
+addi $14, $0, 40
+blt $3, $14, nml
+blt $7, $14, nml
+blt $9, $14, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
 
 addi $2, $2, 1
-sw $2, 0($0)
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
 
 rthreesthree:
 
-addi $27, $27, -20
-addi $26, $26, 20
-addi $25, $25, -40
-addi $24, $24, 40
-addi $23, $23, 20
-addi $22, $22, 20
+addi $3, $27, -20
+addi $4, $26, 20
+addi $7, $25, -40
+addi $8, $24, 40
+addi $9, $23, 20
+addi $10, $22, 20
 
-sw $0, 0($0)
+addi $14, $0, 250
+blt $14, $10, nml
+blt $14, $8, nml
+blt $14, $4, nml
+addi $14, $0, 40
+blt $3, $14, nml
+blt $7, $14, nml
+addi $14, $0, 430
+blt $14, $9, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
+
+addi $14, $0, 1000
+sw $0, 0($14)
 jr $31
 
 
@@ -1383,181 +1618,572 @@ rfour:
 addi $2, $0, 35
 bne $20, $2, rfive
 
-lw $2, 0($0)
+addi $14, $0, 1000
+lw $2, 0($14)
 bne $2, $0, rfoursone
 
-addi $27, $27, 20
-addi $26, $26, 20
-addi $25, $25, 40
-addi $24, $24, 40
-addi $23, $23, -20
-addi $22, $22, 20
+addi $3, $27, 20
+addi $4, $26, 20
+addi $7, $25, 40
+addi $8, $24, 40
+addi $9, $23, -20
+addi $10, $22, 20
+
+addi $14, $0, 250
+blt $14, $10, nml
+blt $14, $8, nml
+blt $14, $4, nml
+addi $14, $0, 40
+blt $9, $14, nml
+addi $14, $0, 430
+blt $14, $3, nml
+blt $14, $7, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
 
 addi $2, $2, 1
-sw $2, 0($0)
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
 
 rfoursone:
 addi $3, $0, 1
 bne $2, $3, rfourstwo
 
-addi $27, $27, 20
-addi $26, $26, -20
-addi $25, $25, 40
-addi $24, $24, -40
-addi $23, $23, 20
-addi $22, $22, 20
+addi $3, $27, 20
+addi $4, $26, -20
+addi $7, $25, 40
+addi $8, $24, -40
+addi $9, $23, 20
+addi $10, $22, 20
 
-addi $2, $1, 1
-sw $2, 0($0)
+addi $14, $0, 250
+blt $14, $10, nml
+addi $14, $0, 60
+blt $4, $14, nml
+blt $8, $14, nml
+addi $14, $0, 430
+blt $14, $3, nml
+blt $14, $7, nml
+blt $14, $9, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
+
+addi $2, $2, 1
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
 
 rfourstwo:
 addi $3, $0, 2
 bne $2, $3, rfoursthree
 
-addi $27, $27, -20
-addi $26, $26, -20
-addi $25, $25, -40
-addi $24, $24, -40
-addi $23, $23, 20
-addi $22, $22, -20
+addi $3, $27, -20
+addi $4, $26, -20
+addi $7, $25, -40
+addi $8, $24, -40
+addi $9, $23, 20
+addi $10, $22, -20
+
+addi $14, $0, 40
+blt $3, $14, nml
+blt $7, $14, nml
+addi $14, $0, 60
+blt $10, $14, nml
+blt $8, $14, nml
+blt $4, $14, nml
+addi $14, $0, 430
+blt $14, $9, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
 
 addi $2, $2, 1
-sw $2, 0($0)
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
-
+ 
 rfoursthree:
 
-addi $27, $27, 20
-addi $26, $26, -20
-addi $25, $25, 40
-addi $24, $24, -40
-addi $23, $23, 60
-addi $22, $22, -60
+addi $3, $27, -20
+addi $4, $26, 20
+addi $7, $25, -40
+addi $8, $24, 40
+addi $9, $23, -20
+addi $10, $22, -20
 
-sw $0, 0($0)
+addi $14, $0, 40
+blt $3, $14, nml
+blt $7, $14, nml
+blt $9, $14, nml
+addi $14, $0, 60
+blt $10, $14, nml
+addi $14, $0, 250
+blt $14, $8, nml
+blt $14, $4, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
+
+addi $14, $0, 1000
+sw $0, 0($14)
 jr $31
 
 rfive:
 addi $2, $0, 108
 bne $20, $2, rsix
 
-lw $2, 0($0)
+addi $14, $0, 1000
+lw $2, 0($14)
 bne $2, $0, rfivesone
 
-addi $27, $27, 20
-addi $26, $26, 20
-addi $25, $25, -20
-addi $24, $24, 20
-addi $23, $23, 20
-addi $22, $22, -20
+addi $3, $27, 20
+addi $4, $26, 20
+addi $7, $25, -20
+addi $8, $24, 20
+addi $9, $23, 20
+addi $10, $22, -20
+
+addi $14, $0, 40
+blt $7, $14, nml
+addi $14, $0, 430
+blt $14, $3, nml
+blt $14, $9, nml
+addi $14, $0, 60
+blt $10, $14, nml
+addi $14, $0, 250
+blt $14, $8, nml
+blt $14, $4, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
 
 addi $2, $2, 1
-sw $2, 0($0)
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
 
 rfivesone:
 addi $3, $0, 1
 bne $2, $3, rfivestwo
 
-addi $27, $27, 20
-addi $26, $26, -20
-addi $25, $25, 20
-addi $24, $24, 20
-addi $23, $23, -20
-addi $22, $22, -20
+addi $3, $27, 20
+addi $4, $26, -20
+addi $7, $25, 20
+addi $8, $24, 20
+addi $9, $23, -20
+addi $10, $22, -20
 
-addi $2, $1, 1
-sw $2, 0($0)
+addi $14, $0, 40
+blt $9, $14, nml
+addi $14, $0, 430
+blt $14, $3, nml
+blt $14, $7, nml
+addi $14, $0, 60
+blt $10, $14, nml
+blt $4, $14, nml
+addi $14, $0, 250
+blt $14, $8, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
+
+addi $2, $2, 1
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
 
 rfivestwo:
 addi $3, $0, 2
 bne $2, $3, rfivesthree
 
-addi $27, $27, -20
-addi $26, $26, -20
-addi $25, $25, 20
-addi $24, $24, -20
-addi $23, $23, -20
-addi $22, $22, 20
+addi $3, $27, -20
+addi $4, $26, -20
+addi $7, $25, 20
+addi $8, $24, -20
+addi $9, $23, -20
+addi $10, $22, 20
+
+addi $14, $0, 40
+blt $9, $14, nml
+blt $3, $14, nml
+addi $14, $0, 430
+blt $14, $7, nml
+addi $14, $0, 60
+blt $8, $14, nml
+blt $4, $14, nml
+addi $14, $0, 250
+blt $14, $10, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
 
 addi $2, $2, 1
-sw $2, 0($0)
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
 
 rfivesthree:
 
-addi $27, $27, -20
-addi $26, $26, 20
-addi $25, $25, -20
-addi $24, $24, -20
-addi $23, $23, 20
-addi $22, $22, 20
+addi $3, $27, -20
+addi $4, $26, 20
+addi $7, $25, -20
+addi $8, $24, -20
+addi $9, $23, 20
+addi $10, $22, 20
 
-sw $0, 0($0)
+addi $14, $0, 40
+blt $7, $14, nml
+blt $3, $14, nml
+addi $14, $0, 430
+blt $14, $9, nml
+addi $14, $0, 60
+blt $8, $14, nml
+addi $14, $0, 250
+blt $14, $10, nml
+blt $14, $4, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $10
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $27, $3, 0
+addi $26, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $23, $9, 0
+addi $22, $10, 0
+
+addi $14, $0, 1000
+sw $0, 0($14)
 jr $31
 
 rsix:
 addi $2, $0, 113
 bne $20, $2, rseven
 
-lw $2, 0($0)
+addi $14, $0, 1000
+lw $2, 0($14)
 bne $2, $0, rsixsone
 
-addi $29, $29, 20
-addi $28, $28, -40
-addi $26, $26, -20
-addi $25, $25, 20
-addi $22, $22, 20
+addi $3, $29, 20
+addi $4, $28, -20
+addi $7, $25, 20
+addi $8, $24, 20
+addi $9, $22, 40
+
+addi $14, $0, 430
+blt $14, $7, nml
+blt $14, $3, nml
+addi $14, $0, 60
+blt $4, $14, nml
+addi $14, $0, 250
+blt $14, $8, nml
+blt $14, $9, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $23
+add $11, $11, $9
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $29, $3, 0
+addi $28, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $22, $9, 0
 
 addi $2, $2, 1
-sw $2, 0($0)
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
 
 rsixsone:
 
-addi $29, $29, -20
-addi $28, $28, 40
-addi $26, $26, 20
-addi $25, $25, -20
-addi $22, $22, -20
+addi $3, $29, -20
+addi $4, $28, 20
+addi $7, $25, -20
+addi $8, $24, -20
+addi $9, $22, -40
 
-sw $0, 0($0)
+addi $14, $0, 40
+blt $7, $14, nml
+blt $3, $14, nml
+addi $14, $0, 60
+blt $8, $14, nml
+blt $9, $14, nml
+addi $14, $0, 250
+blt $14, $4, nml
+
+mul $11, $16, $3
+add $11, $11, $4
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $7
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $23
+add $11, $11, $9
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $29, $3, 0
+addi $28, $4, 0
+addi $25, $7, 0
+addi $24, $8, 0
+addi $22, $9, 0
+
+addi $14, $0, 1000
+sw $0, 0($14)
 jr $31
 # t7
 rseven:
 addi $2, $0, 86
 bne $20, $2, nml
 
-lw $2, 0($0)
+addi $14, $0, 1000
+lw $2, 0($14)
 bne $2, $0, rsevensone
 
-addi $29, $29, 40
-addi $28, $28, -20
-addi $27, $27, 20
-addi $24, $24, -20
-addi $23, $23, -20
+addi $3, $28, 40
+addi $4, $27, -20
+addi $7, $26, 20
+addi $8, $22, -20
+addi $9, $23, -20
+
+addi $14, $0, 40
+blt $4, $14, nml
+blt $9, $14, nml
+addi $14, $0, 60
+blt $8, $14, nml
+addi $14, $0, 250
+blt $14, $3, nml
+blt $14, $7, nml
+
+mul $11, $16, $29
+add $11, $11, $3
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $4
+add $11, $11, $7
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $28, $3, 0
+addi $27, $4, 0
+addi $26, $7, 0
+addi $22, $8, 0
+addi $23, $9, 0
 
 addi $2, $2, 1
-sw $2, 0($0)
+addi $14, $0, 1000
+sw $2, 0($14)
 jr $31
 
 rsevensone:
-addi $29, $29, -40
-addi $28, $28, 20
-addi $27, $27, -20
-addi $24, $24, 20
-addi $23, $23, 20
+addi $3, $28, -40
+addi $4, $27, 20
+addi $7, $26, -20
+addi $8, $22, 20
+addi $9, $23, 20
 
-sw $0, 0($0)
+addi $14, $0, 60
+blt $3, $14, nml
+blt $7, $14, nml
+addi $14, $0, 250
+blt $14, $8, nml
+addi $14, $0, 430
+blt $14, $4, nml
+blt $14, $9, nml
+
+mul $11, $16, $29
+add $11, $11, $3
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $4
+add $11, $11, $7
+ilw $11, 0($11)
+bne $11, $1, nml
+
+mul $11, $16, $9
+add $11, $11, $8
+ilw $11, 0($11)
+bne $11, $1, nml
+
+addi $28, $3, 0
+addi $27, $4, 0
+addi $26, $7, 0
+addi $22, $8, 0
+addi $23, $9, 0
+
+addi $14, $0, 1000
+sw $0, 0($14)
 jr $31
-
-# end game
-
-
-
 
 infinity:
 j infinity
