@@ -1,9 +1,9 @@
-addi $21, $0, 154;
-addi $1, $0, 4; # Screen Mode
-sll $1, $1, 3;
-addi $1, $1, 5; # result and type
-sll $15, $1, 26;
-j endgame;
+# addi $21, $0, 154;
+# addi $1, $0, 4; # Screen Mode
+# sll $1, $1, 3;
+# addi $1, $1, 5; # result and type
+# sll $15, $1, 26;
+# j endgame;
 # ======================================================================================================
 # Loop for Main Menu Screen
 # ======================================================================================================
@@ -67,13 +67,13 @@ sll $15, $1, 29;
 j gameonep;
 # Transition to Endless mode
 mainmenu_to_end:
-# TODO: put correct values*************************************************************
-addi $1, $0, 2;
-j infinity;
+addi $1, $0, 1;
+sll $15, $1, 29;
+addi $15, $15, 1;
+j gameonep;
 # Transition to 2P mode
 mainmenu_to_twop:
-# TODO: put correct values*************************************************************
-addi $1, $0, 3;
+# Take out 2p mode***********************************************
 j infinity;
 # Transition to 1P Scores
 mainmenu_to_toponep:
@@ -401,9 +401,10 @@ and $4, $4, $5;
 bne $4, $0, 1;
 j endgame_to_onep;
 # Transition to Endless mode
-# TODO: put correct values************************************************************
-addi $1, $0, 2;
-j infinity;
+addi $1, $0, 1;
+sll $15, $1, 29;
+addi $15, $15, 1;
+j gameonep;
 # Transition to 1P mode
 endgame_to_onep:
 addi $1, $0, 1;
