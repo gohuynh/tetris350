@@ -85,7 +85,11 @@ module processor(
 	 
 	 // In Game Timing
 	 counter,
-	 seconds
+	 seconds,
+	 
+	 // Sound
+	 sfx_play,
+	 sfx_freq
 	 
 	
 );
@@ -120,6 +124,10 @@ module processor(
 	 // In Game Timing
 	 input [25:0] counter;
 	 input [15:0] seconds;
+	 
+	 // Sound
+	 output sfx_play;
+	 output [31:0] sfx_freq;
 
     /* YOUR CODE STARTS HERE */
 	 
@@ -175,11 +183,11 @@ module processor(
 					dOpcode, rawRd, rawRs, rawRt, dShamt, dAluOp, dImm, dT, fdSeqNextPC, instOut);
 	 
 	 // Decode
-	 wire dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dIsw, dIlw, dRi, dRtick, dRsec, dSetx, dBex;
-	 opDecoder dOpDecoder(dOpcode, dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dIsw, dIlw, dRi, dRtick, dRsec, dSetx, dBex);
+	 wire dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dIsw, dIlw, dRi, dRtick, dRsec, dSfx, dSetx, dBex;
+	 opDecoder dOpDecoder(dOpcode, dR, dJ, dBne, dJal, dJr, dAddi, dBlt, dSw, dLw, dIsw, dIlw, dRi, dRtick, dRsec, dSfx, dSetx, dBex);
 	 
 	 // Reassign register read sources and destination if needed
-	 or rdOr(readRd, dBne, dJr, dBlt);
+	 or rdOr(readRd, dBne, dJr, dBlt, dSfx);
 	 or rtOr(rsToRd, dBne, dBlt);
 	 
 	 wire useRawRd, useRawRs, useRawRt, dswisw;
@@ -228,8 +236,8 @@ module processor(
 					dxSeqNextPC, operandA, operandB, xOpcode, xRdOriginal, xShamt, xAluOp, xImm, xT, xRs, xRt);
 	 
 	 // Decode
-	 wire xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xIsw, xIlw, xRi, xRtick, xRsec, xSetx, xBex;
-	 opDecoder xOpDecoder(xOpcode, xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xIsw, xIlw, xRi, xRtick, xRsec, xSetx, xBex);
+	 wire xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xIsw, xIlw, xRi, xRtick, xRsec, xSfx, xSetx, xBex;
+	 opDecoder xOpDecoder(xOpcode, xR, xJ, xBne, xJal, xJr, xAddi, xBlt, xSw, xLw, xIsw, xIlw, xRi, xRtick, xRsec, xSfx, xSetx, xBex);
 	 
 	 // Sign extend for imm
 	 wire[31:0] extendedImm;
@@ -385,6 +393,15 @@ module processor(
 	 
 	 or orXSWIns(xSwIns, xSw, xIsw);
 	 assign x2mRd = xSwIns ? 5'd0 : xRd;
+	 
+	 /*
+	 ======================
+	 Sound Stuff
+	 ======================
+	 */
+	 
+	 assign sfx_play = xSfx;
+	 assign sfx_freq = xSfx ? aluInA : 32'd0;
 	 
 	 
 	 /*

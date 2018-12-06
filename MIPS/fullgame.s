@@ -1,16 +1,10 @@
-# addi $21, $0, 154;
-# addi $1, $0, 4; # Screen Mode
-# sll $1, $1, 3;
-# addi $1, $1, 5; # result and type
-# sll $15, $1, 26;
-# j endgame;
 # ======================================================================================================
 # Loop for Main Menu Screen
 # ======================================================================================================
 mainmenu:
 # Change screen and set up registers
 add $15, $0, $0;
-addi $1, $0, 40625;
+addi $1, $0, 43750;
 sll $1, $1, 5;
 add $2, $0, $0;
 # Input loop:
@@ -25,27 +19,46 @@ mainmenu_handle_input:
 ri $3;
 addi $4, $0, 4;
 bne $3, $4, 1;
-j mainmenu_toggle;
+j mainmenu_down;
 addi $4, $0, 8;
+bne $3, $4, 1;
+j mainmenu_up;
+addi $4, $0, 2;
 bne $3, $4, 1;
 j mainmenu_select;
 jr $31;
-# Toggle through options
-mainmenu_toggle:
-addi $3, $0, 1;
-sll $3, $3, 26;
-add $15, $15, $3;
-sra $3, $15, 26;
-addi $4, $0, 7;
+# Down input
+mainmenu_down:
+addi $10, $0, 440;
+sfx $10;
+sra $3, $15, 27;
+addi $4, $0, 3;
 and $3, $3, $4;
-addi $4, $0, 5;
-blt $3, $4, 1;
-add $15, $0, $0;
+bne $3, $4, 1;
+jr $31;
+addi $3, $0, 1;
+sll $3, $3, 27;
+add $15, $15, $3;
+jr $31;
+# Up input
+mainmenu_up:
+addi $10, $0, 440;
+sfx $10;
+sra $3, $15, 27;
+addi $4, $0, 3;
+and $3, $3, $4;
+bne $3, $0, 1;
+jr $31;
+addi $3, $0, 1;
+sll $3, $3, 27;
+sub $15, $15, $3;
 jr $31;
 # Logic to transition to selected screen
 mainmenu_select:
-sra $3, $15, 26;
-addi $4, $0, 7;
+addi $10, $0, 440;
+sfx $10;
+sra $3, $15, 27;
+addi $4, $0, 3;
 and $3, $3, $4;
 addi $4, $0, 0;
 bne $3, $4, 1;
@@ -53,9 +66,6 @@ j mainmenu_to_onep;
 addi $4, $4, 1;
 bne $3, $4, 1;
 j mainmenu_to_end;
-addi $4, $4, 1;
-bne $3, $4, 1;
-j mainmenu_to_twop;
 addi $4, $4, 1;
 bne $3, $4, 1;
 j mainmenu_to_toponep;
@@ -566,8 +576,8 @@ jr $31;
 # Loop for Endless Leaderboard
 # ======================================================================================================
 topend:
-addi $1, $0, 6;
-sll $15, $1, 29;
+addi $1, $0, 11;
+sll $15, $1, 28;
 # Load Names
 lw $22 11($0);
 lw $24 13($0);
@@ -693,7 +703,7 @@ blt $3, $2, tSix
 j tSeven
 
 tOne:
-addi $20, $0, 109
+addi $20, $0, 108
 
 addi $22, $0, 140
 addi $23, $0, 60
@@ -709,7 +719,7 @@ addi $29, $0, 40
 j startgameloop
 
 tTwo:
-addi $20, $0, 179
+addi $20, $0, 106
 
 addi $22, $0, 140
 addi $23, $0, 100
@@ -725,7 +735,7 @@ addi $29, $0, 40
 j startgameloop
 
 tThree:
-addi $20, $0, 106
+addi $20, $0, 86
 
 addi $22, $0, 160
 addi $23, $0, 80
@@ -741,7 +751,7 @@ addi $25, $0, 40
 j startgameloop
 
 tFour:
-addi $20, $0, 35
+addi $20, $0, 179
 
 addi $22, $0, 140
 addi $23, $0, 80
@@ -757,7 +767,7 @@ addi $25, $0, 40
 j startgameloop
 
 tFive:
-addi $20, $0, 108
+addi $20, $0, 113
 
 addi $22, $0, 160
 addi $23, $0, 60
@@ -773,7 +783,7 @@ addi $25, $0, 60
 j startgameloop
 
 tSix:
-addi $20, $0, 113
+addi $20, $0, 109
 
 addi $22, $0, 140
 addi $23, $0, 80
@@ -789,7 +799,7 @@ addi $29, $0, 40
 j startgameloop
 
 tSeven:
-addi $20, $0, 86
+addi $20, $0, 35
 
 addi $22, $0, 160
 addi $23, $0, 80
@@ -1034,6 +1044,9 @@ addi $13, $13, 620
 addi $4, $4, 1
 blt $4, $2, toploopfour
 
+# Set color to black to help with line clear animation
+addi $20, $0, 0;
+
 # save complete, now check if any line needs to be cleared
 # $2, $3, $4, $7, $8, $9, $10, $11
 # checking the row of cell1
@@ -1058,6 +1071,11 @@ addi $3, $3, -200
 addi $10, $3, 0
 addi $11, $10, 0
 addi $14, $0, 25600
+
+# Line clear animation
+sw $31, 1131($0);
+jal line_clear_animation;
+lw $31, 1131($0);
 
 clearloopfour:
 addi $9, $0, 10
@@ -1114,10 +1132,16 @@ addi $3, $3, 20
 addi $2, $2, -1
 bne $0, $2, cclooptwo
 
+
 addi $3, $3, -200
 addi $10, $3, 0
 addi $11, $10, 0
 addi $14, $0, 25600
+
+# Line clear animation
+sw $31, 1131($0);
+jal line_clear_animation;
+lw $31, 1131($0);
 
 clearloopfourb:
 addi $9, $0, 10
@@ -1174,10 +1198,16 @@ addi $3, $3, 20
 addi $2, $2, -1
 bne $0, $2, ccloopthree
 
+
 addi $3, $3, -200
 addi $10, $3, 0
 addi $11, $10, 0
 addi $14, $0, 25600
+
+# Line clear animation
+sw $31, 1131($0);
+jal line_clear_animation;
+lw $31, 1131($0);
 
 clearloopfourc:
 addi $9, $0, 10
@@ -1238,6 +1268,11 @@ addi $3, $3, -200
 addi $10, $3, 0
 addi $11, $10, 0
 addi $14, $0, 25600
+
+# Line clear animation
+sw $31, 1131($0);
+jal line_clear_animation;
+lw $31, 1131($0);
 
 clearloopfourd:
 addi $9, $0, 10
@@ -1446,7 +1481,7 @@ jr $31
 
 rotate:
 #t2
-addi $2, $0, 179
+addi $2, $0, 106
 bne $20, $2, rthree
 addi $14, $0, 1000
 lw $2, 0($14)
@@ -1552,7 +1587,7 @@ sw $0, 0($14)
 jr $31
 
 rthree:
-addi $2, $0, 106
+addi $2, $0, 86
 bne $20, $2, rfour
 
 addi $14, $0, 1000
@@ -1746,7 +1781,7 @@ jr $31
 
 
 rfour:
-addi $2, $0, 35
+addi $2, $0, 179
 bne $20, $2, rfive
 
 addi $14, $0, 1000
@@ -1939,7 +1974,7 @@ sw $0, 0($14)
 jr $31
 
 rfive:
-addi $2, $0, 108
+addi $2, $0, 113
 bne $20, $2, rsix
 
 addi $14, $0, 1000
@@ -2136,7 +2171,7 @@ sw $0, 0($14)
 jr $31
 
 rsix:
-addi $2, $0, 113
+addi $2, $0, 109
 bne $20, $2, rseven
 
 addi $14, $0, 1000
@@ -2227,7 +2262,7 @@ sw $0, 0($14)
 jr $31
 # t7
 rseven:
-addi $2, $0, 86
+addi $2, $0, 35
 bne $20, $2, nml
 
 addi $14, $0, 1000
@@ -2315,6 +2350,73 @@ addi $23, $9, 0
 addi $14, $0, 1000
 sw $0, 0($14)
 jr $31
+
+# Instructions to clear lines
+# Assumes $3 is top leftmost pixel in row
+line_clear_animation:
+sw $1, 1101($0);
+sw $2, 1102($0);
+sw $3, 1103($0);
+sw $4, 1104($0);
+sw $5, 1105($0);
+sw $6, 1106($0);
+sw $7, 1107($0);
+sw $8, 1108($0);
+sw $9, 1109($0);
+sw $10, 1110($0);
+sw $31, 1231($0);
+
+# Clear top half columns left to right
+addi $1, $3, 0;
+addi $2, $1, 200;
+line_clear_left_to_right:
+addi $3, $1, 0;
+addi $4, $3, 6400;
+line_clear_left_to_right_clear_column:
+isw $0, 0($3);
+addi $3, $3, 640;
+blt $3, $4, line_clear_left_to_right_clear_column;
+addi $1, $1, 1;
+jal line_clear_animation_wait;
+bne $1, $2, line_clear_left_to_right;
+# Clear bottom half columns right to left
+addi $1, $1, 6400;
+addi $2, $1, -200;
+line_clear_right_to_left:
+addi $1, $1, -1;
+addi $3, $1, 0;
+addi $4, $3, 6400;
+line_clear_right_to_left_clear_column:
+isw $0, 0($3);
+addi $3, $3, 640;
+blt $3, $4, line_clear_right_to_left_clear_column;
+jal line_clear_animation_wait;
+bne $1, $2, line_clear_right_to_left;
+
+lw $1, 1101($0);
+lw $2, 1102($0);
+lw $3, 1103($0);
+lw $4, 1104($0);
+lw $5, 1105($0);
+lw $6, 1106($0);
+lw $7, 1107($0);
+lw $8, 1108($0);
+lw $9, 1109($0);
+lw $10, 1110($0);
+lw $31, 1231($0);
+jr $31;
+
+
+# Stalls for ~124,500 cycles
+line_clear_animation_wait:
+addi $9, $0, 0;
+addi $10, $0, 20750; # 6 instructions per loop iteration
+line_clear_anmiation_wait_loop:
+addi $9, $9, 1;
+blt $10, $9, 1;
+j line_clear_anmiation_wait_loop;
+jr $31;
+
 
 infinity:
 j infinity

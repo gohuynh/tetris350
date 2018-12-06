@@ -12,13 +12,14 @@ module vga_processor(seconds,
 							b4x,
 							b4y,
 							score,
-							blockType
+							blockType,
+							metadata
 							);
 	input [15:0] seconds;
 	input [18:0] curAddress;
 	input [7:0] indexIn;
 	input [31:0] b1x, b1y, b2x, b2y, b3x, b3y, b4x, b4y;
-	input [31:0] score, blockType;
+	input [31:0] score, blockType, metadata;
 	
 	output [18:0] addrToRead;
 	output [7:0] indexOut;
@@ -28,7 +29,7 @@ module vga_processor(seconds,
 	wire [9:0] curX, curY;
 	addr_to_cart addrCoord(curAddress, curX, curY);
 	
-	wire [18:0] zero, one, two, three, four, five, six, seven, eight, nine;
+	wire [18:0] zero, one, two, three, four, five, six, seven, eight, nine, label;
 	assign zero = 19'd307200;
 	assign one = 19'd307725;
 	assign two = 19'd308250;
@@ -39,10 +40,12 @@ module vga_processor(seconds,
 	assign seven = 19'd310875;
 	assign eight = 19'd311400;
 	assign nine = 19'd311925;
+	assign label = 19'd326100;
 	reg [13:0] thousands, hundreds, tens, ones;
 	reg [18:0] offsetL0, offsetL1, offsetL2, offsetL3;
 	reg [13:0] min1, min0, sec1, sec0;
 	reg [18:0] offsetT0, offsetT1, offsetT2, offsetT3;
+	reg [18:0] labelOffset;
 	
 	initial
 	begin
@@ -62,6 +65,7 @@ module vga_processor(seconds,
 		offsetT1 <= 19'd0;
 		offsetT2 <= 19'd0;
 		offsetT3 <= 19'd0;
+		labelOffset <= 19'd0;
 	end
 	
 	always @(score)
@@ -91,6 +95,8 @@ module vga_processor(seconds,
 		offsetT2 = curX - 10'd431 + ((curY - 10'd415)*10'd21);
 		offsetT1 = curX - 10'd463 + ((curY - 10'd415)*10'd21);
 		offsetT0 = curX - 10'd484 + ((curY - 10'd415)*10'd21);
+		
+		labelOffset = curX - 10'd336 + ((curY - 10'd243)*10'd242);
 	end
 	
 	always
@@ -211,6 +217,12 @@ module vga_processor(seconds,
 			else
 				addrToRead <= curAddress;
 		end
+		
+		else if (curX >= 10'd336 && curX < 10'd578 && curY >= 10'd243 && curY < 10'd269 && metadata[0])
+		begin
+			addrToRead <= label + labelOffset;
+		end
+		
 		else
 			addrToRead <= curAddress;
 	end
@@ -218,14 +230,19 @@ module vga_processor(seconds,
 	
 	always
 	begin
-		if (curX >= b1x[9:0] && curX < b1x[9:0] + 10'd20 && curY >= b1y[9:0] && curY < b1y[9:0] + 10'd20)
-			indexOut <= blockType[7:0];
-		else if (curX >= b2x[9:0] && curX < b2x[9:0] + 10'd20 && curY >= b2y[9:0] && curY < b2y[9:0] + 10'd20)
-			indexOut <= blockType[7:0];
-		else if (curX >= b3x[9:0] && curX < b3x[9:0] + 10'd20 && curY >= b3y[9:0] && curY < b3y[9:0] + 10'd20)
-			indexOut <= blockType[7:0];
-		else if (curX >= b4x[9:0] && curX < b4x[9:0] + 10'd20 && curY >= b4y[9:0] && curY < b4y[9:0] + 10'd20)
-			indexOut <= blockType[7:0];
+		if (blockType[7:0] != 8'd0)
+		begin
+			if (curX >= b1x[9:0] && curX < b1x[9:0] + 10'd20 && curY >= b1y[9:0] && curY < b1y[9:0] + 10'd20)
+				indexOut <= blockType[7:0];
+			else if (curX >= b2x[9:0] && curX < b2x[9:0] + 10'd20 && curY >= b2y[9:0] && curY < b2y[9:0] + 10'd20)
+				indexOut <= blockType[7:0];
+			else if (curX >= b3x[9:0] && curX < b3x[9:0] + 10'd20 && curY >= b3y[9:0] && curY < b3y[9:0] + 10'd20)
+				indexOut <= blockType[7:0];
+			else if (curX >= b4x[9:0] && curX < b4x[9:0] + 10'd20 && curY >= b4y[9:0] && curY < b4y[9:0] + 10'd20)
+				indexOut <= blockType[7:0];
+			else
+				indexOut <= indexIn;
+		end
 		else
 			indexOut <= indexIn;
 	end

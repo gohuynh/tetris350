@@ -17,7 +17,15 @@ module tetris(clock,
 	 IO_down_LED,
 	 IO_rotate_cw_LED,
 	 DEBUG_gamemode,
-	 DEBUG_mode
+	 DEBUG_mode,
+	 AUD_ADCDAT,
+	 AUD_BCLK,
+	 AUD_ADCLRCK,
+	 AUD_DACLRCK,
+	 AUD_XCK,
+	 AUD_DACDAT,
+	 I2C_SDAT,
+	 I2C_SCLK
 //	 outy
 //	 dataToReg,
 //	 regdest
@@ -28,6 +36,20 @@ module tetris(clock,
 //	output [31:0] outy;
 	input [15:0] DEBUG_gamemode;
 	input DEBUG_mode;
+	 
+	 
+	 input				AUD_ADCDAT;
+
+	 // Bidirectionals
+	 inout				AUD_BCLK;
+	 inout				AUD_ADCLRCK;
+	 inout				AUD_DACLRCK;
+    inout				I2C_SDAT;
+
+	 // Outputs
+	 output				AUD_XCK;
+	 output				AUD_DACDAT;
+	 output				I2C_SCLK;
 	 
 	 input IO_left, IO_right, IO_down, IO_rotate_cw;
     input clock, reset;
@@ -207,6 +229,24 @@ module tetris(clock,
 									 .screenMode(tempScreenMode),
 									 .sysTime(seconds)
 									 );
+									 
+	 // Audio
+	 wire sfx_play;
+	 wire [31:0] sfx_freq;
+	 DE2_Audio_Example audio(.CLOCK_50(clock),
+									 .KEY(3'd1),
+									 .AUD_ADCDAT(AUD_ADCDAT),
+									 .AUD_BCLK(AUD_BCLK),
+									 .AUD_ADCLRCK(AUD_ADCLRCK),
+									 .AUD_DACLRCK(AUD_DACLRCK),
+									 .I2C_SDAT(I2C_SDAT),
+									 .AUD_XCK(AUD_XCK),
+									 .AUD_DACDAT(AUD_DACDAT),
+									 .I2C_SCLK(I2C_SCLK),
+									 .screenMode(tempScreenMode),
+									 .sfx_play(sfx_play),
+									 .sfx_freq(sfx_freq)
+									 );
 
     /** PROCESSOR **/
     processor my_processor(
@@ -247,7 +287,11 @@ module tetris(clock,
 		  
 		  // In Game Timing
 		  counter,
-		  seconds
+		  seconds,
+		  
+		  // Sound
+		  sfx_play,
+		  sfx_freq
 		  
     );
 	 

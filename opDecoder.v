@@ -1,7 +1,7 @@
-module opDecoder(in, r, j, bne, jal, jr, addi, blt, sw, lw, isw, ilw, ri, rtick, rsec, setx, bex);
+module opDecoder(in, r, j, bne, jal, jr, addi, blt, sw, lw, isw, ilw, ri, rtick, rsec, sfx, setx, bex);
 	input[4:0] in;
 	
-	output r, j, bne, jal, jr, addi, blt, sw, lw, isw, ilw, ri, rtick, rsec, setx, bex;
+	output r, j, bne, jal, jr, addi, blt, sw, lw, isw, ilw, ri, rtick, rsec, sfx, setx, bex;
 	
 	and and0(r, ~in[4], ~in[3], ~in[2], ~in[1], ~in[0]); 		// 00000	r
 	and and1(j, ~in[4], ~in[3], ~in[2], ~in[1], in[0]); 		// 00001	j
@@ -17,7 +17,7 @@ module opDecoder(in, r, j, bne, jal, jr, addi, blt, sw, lw, isw, ilw, ri, rtick,
 	and and11(ri, ~in[4], in[3], ~in[2], in[1], in[0]);		// 01011 ri
 	and and12(rtick, ~in[4], in[3], in[2], ~in[1], ~in[0]);	// 01100 rtick
 	and and13(rsec, ~in[4], in[3], in[2], ~in[1], in[0]);		// 01101 rsec
-//	and and14(w[14], ~in[4], in[3], in[2], in[1], ~in[0]);	// 01110 
+	and and14(sfx, ~in[4], in[3], in[2], in[1], ~in[0]);		// 01110 sfx
 //	and and15(w[15], ~in[4], in[3], in[2], in[1], in[0]);		// 01111
 //	and and16(w[16], in[4], ~in[3], ~in[2], ~in[1], ~in[0]);	// 10000
 //	and and17(w[17], in[4], ~in[3], ~in[2], ~in[1], in[0]);	// 10001

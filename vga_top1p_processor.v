@@ -22,7 +22,10 @@ module vga_top1p_processor(curAddress,
 	reg [18:0] addrToRead;
 	reg [7:0] indexOut;
 	
-	// Decode scores
+	// Decode metadata and scores
+	wire gameType;
+	assign gameType = metadata[28];
+	
 	wire [3:0] score1dig3, score1dig2, score1dig1, score1dig0;
 	wire [3:0] score2dig3, score2dig2, score2dig1, score2dig0;
 	wire [3:0] score3dig3, score3dig2, score3dig1, score3dig0;
@@ -47,7 +50,7 @@ module vga_top1p_processor(curAddress,
 	assign zero = 19'd307200;
 	assign logo = 19'd25940;
 	reg [18:0] logoOffset;
-	reg [18:0] titleOffset;
+	reg [18:0] titleOffset, title1Offset;
 	reg [18:0] entry1Offset, entry2Offset, entry3Offset;
 	reg [18:0] colon1Offset, colon2Offset, colon3Offset;
 	
@@ -55,6 +58,7 @@ module vga_top1p_processor(curAddress,
 	begin
 		logoOffset <= 19'd0;
 		titleOffset <= 19'd0;
+		title1Offset <= 19'd0;
 		entry1Offset <= 19'd0;
 		entry2Offset <= 19'd0;
 		entry3Offset <= 19'd0;
@@ -67,6 +71,7 @@ module vga_top1p_processor(curAddress,
 	begin
 		logoOffset = curX - 10'd35 + ((curY - 10'd160)*10'd640);
 		titleOffset = (curY - 10'd114)*10'd21;
+		title1Offset = (curY - 10'd83)*10'd21;
 		entry1Offset = (curY - 10'd186)*10'd21;
 		colon1Offset = (curY - 10'd186)*10'd640;
 		entry2Offset = (curY - 10'd251)*10'd21;
@@ -81,30 +86,85 @@ module vga_top1p_processor(curAddress,
 		if (curY >= 10'd160 && curY < 10'd316 && curX >= 10'd35 && curX < 10'd266)
 			addrToRead <= logo + logoOffset;
 		
-		// Title
-		else if (curY >= 10'd114 && curY < 10'd139 && curX >= 10'd302 && curX < 10'd596)
+		// Best
+		else if (curY >= 10'd83 && curY < 10'd108 && curX >= 10'd407 && curX < 10'd491)
 		begin
 			// B
-			if (curX >= 10'd302 && curX < 10'd323)
-				addrToRead <= zero + (19'd525 * 19'd11) + (curX - 10'd302) + titleOffset;
+			if (curX >= 10'd407 && curX < 10'd428)
+				addrToRead <= zero + (19'd525 * 19'd11) + (curX - 10'd407) + title1Offset;
 			// E
-			else if (curX >= 10'd323 && curX < 10'd344)
-				addrToRead <= zero + (19'd525 * 19'd14) + (curX - 10'd323) + titleOffset;
-			// S
-			else if (curX >= 10'd344 && curX < 10'd365)
-				addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd344) + titleOffset;
-			// T
-			else if (curX >= 10'd365 && curX < 10'd386)
-				addrToRead <= zero + (19'd525 * 19'd29) + (curX - 10'd365) + titleOffset;
-//			// Space
-//			else if (curX >= 10'd386 && curX < 10'd407)
-//				addrToRead <= zero + (19'd525 * 19'd29) + (curX - 10'd386) + titleOffset;
-			// 1
-			else if (curX >= 10'd407 && curX < 10'd428)
-				addrToRead <= zero + (19'd525 * 19'd1) + (curX - 10'd407) + titleOffset;
-			// P
 			else if (curX >= 10'd428 && curX < 10'd449)
-				addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd428) + titleOffset;
+				addrToRead <= zero + (19'd525 * 19'd14) + (curX - 10'd428) + title1Offset;
+			// S
+			else if (curX >= 10'd449 && curX < 10'd470)
+				addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd449) + title1Offset;
+			// T
+			else if (curX >= 10'd470 && curX < 10'd491)
+				addrToRead <= zero + (19'd525 * 19'd29) + (curX - 10'd470) + title1Offset;
+				
+			else
+				addrToRead <= 19'd1923;
+		end
+			
+		// Title Line 2
+		else if (curY >= 10'd114 && curY < 10'd139 && curX >= 10'd302 && curX < 10'd596)
+		begin
+			// E or C
+			if (curX >= 10'd302 && curX < 10'd323)
+			begin
+				if (gameType)
+					addrToRead <= zero + (19'd525 * 19'd14) + (curX - 10'd302) + titleOffset;
+				else
+					addrToRead <= zero + (19'd525 * 19'd12) + (curX - 10'd302) + titleOffset;
+			end
+			// N or L
+			else if (curX >= 10'd323 && curX < 10'd344)
+			begin
+				if (gameType)
+					addrToRead <= zero + (19'd525 * 19'd23) + (curX - 10'd323) + titleOffset;
+				else
+					addrToRead <= zero + (19'd525 * 19'd21) + (curX - 10'd323) + titleOffset;
+			end
+			// D or A
+			else if (curX >= 10'd344 && curX < 10'd365)
+			begin
+				if (gameType)
+					addrToRead <= zero + (19'd525 * 19'd13) + (curX - 10'd344) + titleOffset;
+				else
+					addrToRead <= zero + (19'd525 * 19'd10) + (curX - 10'd344) + titleOffset;
+			end
+			// L or S
+			else if (curX >= 10'd365 && curX < 10'd386)
+			begin
+				if (gameType)
+					addrToRead <= zero + (19'd525 * 19'd21) + (curX - 10'd365) + titleOffset;
+				else
+					addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd365) + titleOffset;
+			end
+			// E or S
+			else if (curX >= 10'd386 && curX < 10'd407)
+			begin
+				if (gameType)
+					addrToRead <= zero + (19'd525 * 19'd14) + (curX - 10'd386) + titleOffset;
+				else
+					addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd386) + titleOffset;
+			end
+			// S or I
+			else if (curX >= 10'd407 && curX < 10'd428)
+			begin
+				if (gameType)
+					addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd407) + titleOffset;
+				else
+					addrToRead <= zero + (19'd525 * 19'd18) + (curX - 10'd407) + titleOffset;
+			end
+			// S or C
+			else if (curX >= 10'd428 && curX < 10'd449)
+			begin
+				if (gameType)
+					addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd428) + titleOffset;
+				else
+					addrToRead <= zero + (19'd525 * 19'd12) + (curX - 10'd428) + titleOffset;
+			end
 //			// Space
 //			else if (curX >= 10'd449 && curX < 10'd470)
 //				addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd449) + titleOffset;
@@ -130,7 +190,7 @@ module vga_top1p_processor(curAddress,
 			else
 				addrToRead <= 19'd1923;
 		end
-		
+			
 		// Entry 1
 		else if (curY >= 10'd186 && curY < 10'd211 && curX >= 10'd302 && curX < 10'd596)
 		begin
@@ -161,14 +221,22 @@ module vga_top1p_processor(curAddress,
 //			// Space
 //			else if (curX >= 10'd470 && curX < 10'd491)
 //				addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd470) + entry1Offset;
-			// score1dig3
-			else if (curX >= 10'd491 && curX < 10'd512)
+			// Space or score1dig3
+			else if (curX >= 10'd491 && curX < 10'd512 && ~gameType)
 				addrToRead <= zero + (19'd525 * score1dig3) + (curX - 10'd491) + entry1Offset;
-			// score1dig2
+			// score1dig3 or score1dig2
 			else if (curX >= 10'd512 && curX < 10'd533)
-				addrToRead <= zero + (19'd525 * score1dig2) + (curX - 10'd512) + entry1Offset;
-			// colon
-			else if (curX >= 10'd538 && curX < 10'd549)
+			begin
+				if (gameType)
+					addrToRead <= zero + (19'd525 * score1dig3) + (curX - 10'd512) + entry1Offset;
+				else
+					addrToRead <= zero + (19'd525 * score1dig2) + (curX - 10'd512) + entry1Offset;
+			end
+			// score1dig2 if endless
+			else if (curX >= 10'd533 && curX < 10'd554 && gameType)
+				addrToRead <= zero + (19'd525 * score1dig2) + (curX - 10'd533) + entry1Offset;
+			// colon if classic
+			else if (curX >= 10'd538 && curX < 10'd549 && ~gameType)
 				addrToRead <= 19'd266052 + (curX - 10'd538) + colon1Offset;
 			// score1dig1
 			else if (curX >= 10'd554 && curX < 10'd575)
@@ -211,14 +279,22 @@ module vga_top1p_processor(curAddress,
 //			// Space
 //			else if (curX >= 10'd470 && curX < 10'd491)
 //				addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd470) + entry1Offset;
-			// score2dig3
-			else if (curX >= 10'd491 && curX < 10'd512)
+			// score2dig3 if classic
+			else if (curX >= 10'd491 && curX < 10'd512 && ~gameType)
 				addrToRead <= zero + (19'd525 * score2dig3) + (curX - 10'd491) + entry2Offset;
-			// score2dig2
+			// score2dig3 or score2dig2
 			else if (curX >= 10'd512 && curX < 10'd533)
-				addrToRead <= zero + (19'd525 * score2dig2) + (curX - 10'd512) + entry2Offset;
-			// colon
-			else if (curX >= 10'd538 && curX < 10'd549)
+			begin
+				if (gameType)
+					addrToRead <= zero + (19'd525 * score2dig3) + (curX - 10'd512) + entry2Offset;
+				else
+					addrToRead <= zero + (19'd525 * score2dig2) + (curX - 10'd512) + entry2Offset;
+			end
+			// score2dig2 if endless
+			else if (curX >= 10'd533 && curX < 10'd554 && gameType)
+				addrToRead <= zero + (19'd525 * score2dig2) + (curX - 10'd533) + entry2Offset;
+			// colon if classic
+			else if (curX >= 10'd538 && curX < 10'd549 && ~gameType)
 				addrToRead <= 19'd266052 + (curX - 10'd538) + colon2Offset;
 			// score2dig1
 			else if (curX >= 10'd554 && curX < 10'd575)
@@ -248,10 +324,10 @@ module vga_top1p_processor(curAddress,
 				addrToRead <= zero + (19'd525 * name3[17:12]) + (curX - 10'd365) + entry3Offset;
 			// name3char1
 			else if (curX >= 10'd386 && curX < 10'd407)
-				addrToRead <= zero + (19'd525 * name3[11:6]) + (curX - 10'd386) + entry3Offset;
+				addrToRead <= zero + (19'd525 * name2[11:6]) + (curX - 10'd386) + entry3Offset;
 			// name3char0
 			else if (curX >= 10'd407 && curX < 10'd428)
-				addrToRead <= zero + (19'd525 * name3[5:0]) + (curX - 10'd407) + entry3Offset;
+				addrToRead <= zero + (19'd525 * name2[5:0]) + (curX - 10'd407) + entry3Offset;
 //			// Space
 //			else if (curX >= 10'd428 && curX < 10'd449)
 //				addrToRead <= zero + (19'd525 * 19'd25) + (curX - 10'd428) + entry1Offset;
@@ -261,14 +337,22 @@ module vga_top1p_processor(curAddress,
 //			// Space
 //			else if (curX >= 10'd470 && curX < 10'd491)
 //				addrToRead <= zero + (19'd525 * 19'd28) + (curX - 10'd470) + entry1Offset;
-			// score3dig3
-			else if (curX >= 10'd491 && curX < 10'd512)
+			// score3dig3 if classic
+			else if (curX >= 10'd491 && curX < 10'd512 && ~gameType)
 				addrToRead <= zero + (19'd525 * score3dig3) + (curX - 10'd491) + entry3Offset;
-			// score3dig2
+			// score3dig3 or score3dig2
 			else if (curX >= 10'd512 && curX < 10'd533)
-				addrToRead <= zero + (19'd525 * score3dig2) + (curX - 10'd512) + entry3Offset;
-			// colon
-			else if (curX >= 10'd538 && curX < 10'd549)
+			begin
+				if (gameType)
+					addrToRead <= zero + (19'd525 * score3dig3) + (curX - 10'd512) + entry3Offset;
+				else
+					addrToRead <= zero + (19'd525 * score3dig2) + (curX - 10'd512) + entry3Offset;
+			end
+			// score3dig2 if endless
+			else if (curX >= 10'd533 && curX < 10'd554 && gameType)
+				addrToRead <= zero + (19'd525 * score3dig2) + (curX - 10'd533) + entry3Offset;
+			// colon if classic
+			else if (curX >= 10'd538 && curX < 10'd549 && ~gameType)
 				addrToRead <= 19'd266052 + (curX - 10'd538) + colon3Offset;
 			// score3dig1
 			else if (curX >= 10'd554 && curX < 10'd575)

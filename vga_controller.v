@@ -136,7 +136,8 @@ vga_processor myGameProcessor(.seconds(sysTime),
 										.b4x(b4x),
 										.b4y(b4y),
 										.score(vga_score),
-										.blockType(vga_type)
+										.blockType(vga_type),
+										.metadata(metadata)
 										);
 																
 										
@@ -177,20 +178,20 @@ vga_top1p_processor top1p(.curAddress(ADDR),
 
 ////// SCREEN MODE 6 LOGIC
 
-vga_topend_processor	topEnd(.curAddress(ADDR),
-									 .addrToRead(addr6),
-									 .indexIn(q_imgmem),
-									 .indexOut(index6),
-									 .name1(b1x),
-									 .score1(b1y),
-									 .name2(b2x),
-									 .score2(b2y),
-									 .name3(b3x),
-									 .score3(b3y),
-									 .metadata(metadata)
-									 );
-//assign addr6 = ADDR;
-//assign index6 = q_imgmem;
+//vga_topend_processor	topEnd(.curAddress(ADDR),
+//									 .addrToRead(addr6),
+//									 .indexIn(q_imgmem),
+//									 .indexOut(index6),
+//									 .name1(b1x),
+//									 .score1(b1y),
+//									 .name2(b2x),
+//									 .score2(b2y),
+//									 .name3(b3x),
+//									 .score3(b3y),
+//									 .metadata(metadata)
+//									 );
+assign addr6 = ADDR;
+assign index6 = q_imgmem;
 
 ////// SCREEN MODE 7 LOGIC
 
