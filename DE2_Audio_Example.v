@@ -82,9 +82,9 @@ wire write_audio_out;
  
  reg[31:0] beatIndex, nextBeatIndex;
  
- reg[31:0] sfxTimer, sfxCounter, sfxFrequency, sfx;
+// reg[31:0] sfxTimer, sfxCounter, sfxFrequency, sfx, sfxFreq;
  
- reg add, play, sfxAdd;
+ reg add, play;//, sfxAdd, sfxPlay;
  
  wire [31:0] clockFreq;
  
@@ -102,44 +102,46 @@ wire write_audio_out;
 	beatIndex <= 32'd0;
 	nextBeatIndex <= 32'd1;
 	add <= 1'b1;
-	sfxTimer <= 32'd0;
-	sfxCounter <= 32'd0;
-	sfxFrequency <= 32'd0;
-	sfxAdd <= 1'd1;
+//	sfx <= 32'd0;
+//	sfxTimer <= 32'd0;
+//	sfxCounter <= 32'd0;
+//	sfxFrequency <= 32'd0;
+//	sfxAdd <= 1'd1;
+//	sfxPlay <= 1'd0;
+//	sfxFreq <= 32'd0;
  end
  
- always @(posedge CLOCK_50)
- begin
-	if (sfx_play)
-	begin
-		sfxTimer <= 32'd0;
-		sfxCounter <= 32'd0;
-		sfxFrequency <= 32'd25000000 / sfx_freq;
-		sfxAdd <= 1'd1;
-	end
-	else
-	begin
-		if (sfxTimer < 32'd6250000)
-		begin
-			sfxTimer <= sfxTimer + 32'd1;
-			if (sfxCounter >= sfxFrequency)
-			begin
-				sfxAdd <= ~sfxAdd;
-				sfxCounter <= 32'd0;
-			end
-			else
-			begin
-				sfxCounter <= sfxCounter + 32'd1;
-				if (sfxAdd)
-					sfx <= 32'd100000000;
-				else
-					sfx <= 32'd0 - 32'd100000000;				
-			end
-		end
-		else
-			sfx <= 32'd0;
-	end
- end
+// always @(posedge CLOCK_50)
+// begin
+//	sfxPlay <= sfx_play;
+//	sfxFreq <= sfx_freq;
+//	if (sfxPlay)
+//	begin
+//		sfxTimer <= 32'd0;
+//		sfxCounter <= 32'd0;
+//		sfxFrequency <= 32'd25000000 / sfxFreq;
+//		sfxAdd <= 1'd1;
+//	end
+//	if (sfxTimer < 32'd12500000)
+//	begin
+//		sfxTimer <= sfxTimer + 32'd1;
+//		if (sfxCounter >= sfxFrequency)
+//		begin
+//			sfxAdd <= ~sfxAdd;
+//			sfxCounter <= 32'd0;
+//		end
+//		else
+//		begin
+//			sfxCounter <= sfxCounter + 32'd1;
+//			if (sfxAdd)
+//				sfx <= 32'd100000000;
+//			else
+//				sfx <= 32'd0 - 32'd100000000;				
+//		end
+//	end
+//	else
+//		sfx <= 32'd0;
+// end
  
  always
  begin
@@ -464,8 +466,8 @@ assign left_in = left_channel_audio_in;
 assign right_in = right_channel_audio_in;
 
 
-assign left_channel_audio_out = left_out + audio + sfx;
-assign right_channel_audio_out = right_out + audio + sfx;
+assign left_channel_audio_out = left_out + audio;// + sfx;
+assign right_channel_audio_out = right_out + audio;// + sfx;
 assign write_audio_out = audio_in_available & audio_out_allowed;
 
 /*****************************************************************************
