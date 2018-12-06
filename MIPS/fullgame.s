@@ -29,8 +29,6 @@ j mainmenu_select;
 jr $31;
 # Down input
 mainmenu_down:
-addi $10, $0, 440;
-sfx $10;
 sra $3, $15, 27;
 addi $4, $0, 3;
 and $3, $3, $4;
@@ -42,8 +40,6 @@ add $15, $15, $3;
 jr $31;
 # Up input
 mainmenu_up:
-addi $10, $0, 440;
-sfx $10;
 sra $3, $15, 27;
 addi $4, $0, 3;
 and $3, $3, $4;
@@ -55,8 +51,6 @@ sub $15, $15, $3;
 jr $31;
 # Logic to transition to selected screen
 mainmenu_select:
-addi $10, $0, 440;
-sfx $10;
 sra $3, $15, 27;
 addi $4, $0, 3;
 and $3, $3, $4;
